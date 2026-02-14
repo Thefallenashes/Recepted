@@ -65,14 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Insertar nuevo usuario
                 $stmt = $pdo->prepare('
-                    INSERT INTO users (correo, nombre, apellidos, edad, password)
-                    VALUES (:correo, :nombre, :apellidos, :edad, :password)
+                    INSERT INTO users (correo, nombre, apellidos, edad, role, password)
+                    VALUES (:correo, :nombre, :apellidos, :edad, :role, :password)
                 ');
                 $stmt->execute([
                     'correo' => $correo,
                     'nombre' => $nombre,
                     'apellidos' => $apellidos,
                     'edad' => $edad,
+                    'role' => 'user',
                     'password' => $contraseña_encriptada
                 ]);
 
@@ -95,6 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['usuario_nombre'] = $nombre;
                 $_SESSION['usuario_apellidos'] = $apellidos;
                 $_SESSION['usuario_edad'] = $edad;
+                $_SESSION['usuario_rol'] = 'user';
+                $_SESSION['is_admin'] = false;
+                $_SESSION['is_superadmin'] = false;
+                $_SESSION['is_guest'] = false;
 
                 // Crear cookie persistente si el usuario marca 'recordarme' al registrarse
                 $remember = !empty($_POST['remember']);
@@ -102,9 +107,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     create_remember_token($pdo, (int)$user_id);
                 }
 
-                $tipo_mensaje = 'exito';
-                $mensaje = 'Cuenta creada y sesión iniciada. Redirigiendo...';
-                echo '<meta http-equiv="refresh" content="1.5;url=home.php">';
+                if (function_exists('record_audit_log')) {
+                    record_audit_log($pdo, 'register_success', 'info', 'Cuenta creada desde formulario de registro');
+                }
+
+                header('Location: home.php');
+                exit();
             }
         } catch (PDOException $e) {
             $tipo_mensaje = 'error';

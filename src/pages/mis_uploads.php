@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/../utils/auth.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -9,8 +10,12 @@ if (!isset($_SESSION['usuario_id'])) {
 
 try {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('SELECT * FROM uploads WHERE user_id = :user_id ORDER BY uploaded_at DESC');
-    $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
+    if (function_exists('can_manage_all_resources') && can_manage_all_resources()) {
+        $stmt = $pdo->query('SELECT * FROM uploads ORDER BY uploaded_at DESC');
+    } else {
+        $stmt = $pdo->prepare('SELECT * FROM uploads WHERE user_id = :user_id ORDER BY uploaded_at DESC');
+        $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
+    }
     $uploads = $stmt->fetchAll();
 } catch (PDOException $e) {
     error_log('Error fetching uploads: ' . $e->getMessage());

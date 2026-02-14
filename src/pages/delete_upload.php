@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/../utils/auth.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -24,7 +25,8 @@ try {
     $stmt->execute(['id' => $id]);
     $row = $stmt->fetch();
 
-    if (!$row || $row['user_id'] != $_SESSION['usuario_id']) {
+    $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
+    if (!$row || ($row['user_id'] != $_SESSION['usuario_id'] && !$isAdmin)) {
         header('Location: mis_uploads.php');
         exit();
     }

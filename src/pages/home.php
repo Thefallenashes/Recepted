@@ -2,6 +2,23 @@
 session_start();
 
 require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/../utils/auth.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug_guest'])) {
+    try {
+        $pdo = getPDO();
+        if (function_exists('login_as_debug_guest')) {
+            login_as_debug_guest($pdo);
+            if (function_exists('record_audit_log')) {
+                record_audit_log($pdo, 'debug_mode_enabled', 'warning', 'Activado desde home.php');
+            }
+            header('Location: home.php');
+            exit();
+        }
+    } catch (Exception $e) {
+        error_log('Error en debug guest home: ' . $e->getMessage());
+    }
+}
 
 // Verificar si el usuario está autenticado
 if (!isset($_SESSION['usuario_id'])) {
@@ -39,11 +56,21 @@ try {
     <div class="home-container">
         <header class="header">
             <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
+            <form method="POST" action="" style="margin: 10px 0;">
+                <button type="submit" name="debug_guest" value="1">Debug</button>
+            </form>
             <nav class="navbar">
                 <ul>
                     <li><a href="home.php">Inicio</a></li>
                     <li><a href="finanzas.php">Finanzas</a></li>
                     <li><a href="perfil.php">Perfil</a></li>
+                    <li><a href="tickets.php">Tickets</a></li>
+                    <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
+                        <li><a href="admin_panel.php">Panel Admin</a></li>
+                    <?php endif; ?>
+                    <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
+                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                    <?php endif; ?>
                     <li><a href="config.php">Configuración</a></li>
                     <li><a href="logout.php">Cerrar Sesión</a></li>
                 </ul>

@@ -36,11 +36,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($usuario && password_verify($contraseña, $usuario['password'])) {
                 // Inicio de sesión exitoso
                 session_regenerate_id(true);
+                $rol = strtolower(trim((string)($usuario['role'] ?? 'user')));
+                if (!in_array($rol, ['user', 'admin', 'superadmin'], true)) {
+                    $rol = 'user';
+                }
                 $_SESSION['usuario_id'] = $usuario['id'];
                 $_SESSION['usuario_correo'] = $usuario['correo'];
                 $_SESSION['usuario_nombre'] = $usuario['nombre'];
                 $_SESSION['usuario_apellidos'] = $usuario['apellidos'];
                 $_SESSION['usuario_edad'] = $usuario['edad'];
+                $_SESSION['usuario_rol'] = $rol;
+                $_SESSION['is_admin'] = in_array($rol, ['admin', 'superadmin'], true);
+                $_SESSION['is_superadmin'] = ($rol === 'superadmin');
+                $_SESSION['is_guest'] = false;
 
                 // Crear token persistente (cookie) para recordar al usuario 3 días si pidió recordarme
                 $remember = !empty($_POST['remember']);
@@ -48,9 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     create_remember_token($pdo, (int)$usuario['id']);
                 }
 
-                $tipo_mensaje = 'exito';
-                $mensaje = 'Sesión iniciada correctamente. Redirigiendo...';
-                echo '<meta http-equiv="refresh" content="1.5;url=home.php">';
+                if (function_exists('record_audit_log')) {
+                    record_audit_log($pdo, 'login_success', 'info', 'Inicio de sesión correcto');
+                }
+
+                header('Location: home.php');
+                exit();
             } else {
                 $tipo_mensaje = 'error';
                 $mensaje = 'Correo o contraseña incorrectos';

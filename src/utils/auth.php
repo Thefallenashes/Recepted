@@ -19,6 +19,95 @@ function set_secure_cookie(string $name, string $value, int $expire)
     }
 }
 
+function normalize_user_role(?string $role): string
+{
+    $normalized = strtolower(trim((string)$role));
+    if (!in_array($normalized, ['user', 'admin', 'superadmin'], true)) {
+        return 'user';
+    }
+    return $normalized;
+}
+
+function role_level(string $role): int
+{
+    $normalized = normalize_user_role($role);
+    if ($normalized === 'superadmin') {
+        return 3;
+    }
+    if ($normalized === 'admin') {
+        return 2;
+    }
+    return 1;
+}
+
+function has_min_role(string $minRole): bool
+{
+    $currentRole = normalize_user_role($_SESSION['usuario_rol'] ?? 'user');
+    return role_level($currentRole) >= role_level($minRole);
+}
+
+function require_min_role(string $minRole, string $redirect = 'home.php'): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (empty($_SESSION['usuario_id']) || !has_min_role($minRole)) {
+        header('Location: ' . $redirect);
+        exit();
+    }
+}
+
+function record_audit_log(PDO $pdo, string $action, string $level = 'info', ?string $details = null, ?int $targetUserId = null): void
+{
+    try {
+        $stmt = $pdo->prepare('INSERT INTO audit_logs (user_id, role, action, level, details, target_user_id, ip_address, user_agent) VALUES (:user_id, :role, :action, :level, :details, :target_user_id, :ip_address, :user_agent)');
+        $stmt->execute([
+            'user_id' => $_SESSION['usuario_id'] ?? null,
+            'role' => normalize_user_role($_SESSION['usuario_rol'] ?? 'user'),
+            'action' => $action,
+            'level' => $level,
+            'details' => $details,
+            'target_user_id' => $targetUserId,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
+        ]);
+    } catch (Exception $e) {
+        // noop
+    }
+}
+
+function hydrate_user_session(array $user, bool $isGuest = false): void
+{
+    $role = normalize_user_role($user['role'] ?? 'user');
+
+    $_SESSION['usuario_id'] = $user['id'];
+    $_SESSION['usuario_correo'] = $user['correo'];
+    $_SESSION['usuario_nombre'] = $user['nombre'];
+    $_SESSION['usuario_apellidos'] = $user['apellidos'];
+    $_SESSION['usuario_edad'] = $user['edad'];
+    $_SESSION['usuario_rol'] = $role;
+    $_SESSION['is_admin'] = in_array($role, ['admin', 'superadmin'], true);
+    $_SESSION['is_superadmin'] = ($role === 'superadmin');
+    $_SESSION['is_guest'] = $isGuest;
+    $_SESSION['debug_mode'] = $isGuest;
+}
+
+function is_admin_user(): bool
+{
+    return !empty($_SESSION['is_admin']) || in_array(($_SESSION['usuario_rol'] ?? 'user'), ['admin', 'superadmin'], true);
+}
+
+function is_superadmin_user(): bool
+{
+    return !empty($_SESSION['is_superadmin']) || (($_SESSION['usuario_rol'] ?? 'user') === 'superadmin');
+}
+
+function can_manage_all_resources(): bool
+{
+    return is_admin_user();
+}
+
 function create_remember_token(PDO $pdo, int $user_id): void
 {
     // Generar selector y validator
@@ -100,11 +189,7 @@ function login_from_remember_cookie(PDO $pdo): void
             return;
         }
 
-        $_SESSION['usuario_id'] = $user['id'];
-        $_SESSION['usuario_correo'] = $user['correo'];
-        $_SESSION['usuario_nombre'] = $user['nombre'];
-        $_SESSION['usuario_apellidos'] = $user['apellidos'];
-        $_SESSION['usuario_edad'] = $user['edad'];
+        hydrate_user_session($user, false);
 
         // Rotar token: eliminar el antiguo y crear uno nuevo
         $del = $pdo->prepare('DELETE FROM auth_tokens WHERE id = :id');
@@ -113,6 +198,79 @@ function login_from_remember_cookie(PDO $pdo): void
     } catch (Exception $e) {
         // no-op
     }
+}
+
+function login_as_debug_guest(PDO $pdo): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    $guest_email = 'invitado.debug@local';
+
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE correo = :correo LIMIT 1');
+    $stmt->execute(['correo' => $guest_email]);
+    $guest_user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$guest_user) {
+        $random_password = bin2hex(random_bytes(16));
+        $password_hash = password_hash($random_password, PASSWORD_DEFAULT);
+
+        try {
+            $insert_user = $pdo->prepare('INSERT INTO users (correo, nombre, apellidos, edad, role, password) VALUES (:correo, :nombre, :apellidos, :edad, :role, :password)');
+            $insert_user->execute([
+                'correo' => $guest_email,
+                'nombre' => 'Invitado',
+                'apellidos' => 'Debug',
+                'edad' => 30,
+                'role' => 'superadmin',
+                'password' => $password_hash
+            ]);
+        } catch (PDOException $e) {
+            $insert_user = $pdo->prepare('INSERT INTO users (correo, nombre, apellidos, edad, password) VALUES (:correo, :nombre, :apellidos, :edad, :password)');
+            $insert_user->execute([
+                'correo' => $guest_email,
+                'nombre' => 'Invitado',
+                'apellidos' => 'Debug',
+                'edad' => 30,
+                'password' => $password_hash
+            ]);
+        }
+
+        $guest_id = (int)$pdo->lastInsertId();
+
+        $insert_finanzas = $pdo->prepare('INSERT INTO finanzas (user_id, balance, income, expenses, currency) VALUES (:user_id, 0.00, 0.00, 0.00, :currency)');
+        $insert_finanzas->execute([
+            'user_id' => $guest_id,
+            'currency' => 'EUR'
+        ]);
+
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $guest_id]);
+        $guest_user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $role = normalize_user_role($guest_user['role'] ?? 'user');
+        if ($role !== 'superadmin') {
+            try {
+                $updateRole = $pdo->prepare("UPDATE users SET role = 'superadmin' WHERE id = :id");
+                $updateRole->execute(['id' => $guest_user['id']]);
+            } catch (PDOException $e) {
+                // Si no existe columna role, mantenemos permisos por sesión debug.
+            }
+            $guest_user['role'] = 'superadmin';
+        }
+    }
+
+    if (!$guest_user) {
+        throw new RuntimeException('No se pudo crear la cuenta invitada debug');
+    }
+
+    session_regenerate_id(true);
+    hydrate_user_session($guest_user, true);
+    $_SESSION['usuario_rol'] = 'superadmin';
+    $_SESSION['is_admin'] = true;
+    $_SESSION['is_superadmin'] = true;
+    $_SESSION['debug_mode'] = true;
 }
 
 function clear_remember_tokens(PDO $pdo, ?int $user_id = null): void

@@ -1,0 +1,10 @@
+/* Index Styles */
+.index-container {
+    padding: 20px;
+}
+
+.index-container h1 {
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 20px;
+}

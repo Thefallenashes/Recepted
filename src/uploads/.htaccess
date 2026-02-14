@@ -1,0 +1,8 @@
+# Evita listado de directorio
+Options -Indexes
+
+# Para mayor seguridad: restringir ejecución de scripts
+<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

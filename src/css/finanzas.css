@@ -1,0 +1,12 @@
+/* Finances Styles */
+.finanzas-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.finanzas-container h1 {
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,12 @@
+/* Configuration Styles */
+.config-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.config-container h1 {
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 20px;
+}

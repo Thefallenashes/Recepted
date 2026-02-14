@@ -1,0 +1,12 @@
+/* Profile Styles */
+.perfil-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.perfil-container h1 {
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 20px;
+}

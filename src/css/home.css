@@ -1,10 +1,253 @@
-/* Home Styles */
-.home-container {
-    padding: 20px;
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400&family=Roboto+Serif:opsz,wght@8..144,300&display=swap');
+
+* {
+    box-sizing: border-box;
 }
 
-.home-container h1 {
-    color: #333;
-    font-size: 2em;
-    margin-bottom: 20px;
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Roboto Serif", Georgia, serif;
+    font-weight: 300;
+    color: #0f172a;
+    background: #ffffff;
 }
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Comfortaa", "Segoe UI", sans-serif;
+    font-weight: 400;
+}
+
+.sticky-home-menu {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #e2e8f0;
+    backdrop-filter: blur(8px);
+}
+
+.sticky-home-menu-inner {
+    width: 80%;
+    margin: 0 auto;
+    padding: 12px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-icon-btn.logout-btn {
+    order: 2;
+}
+
+.sticky-links {
+    order: 3;
+    margin-left: auto;
+}
+
+.menu-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #a9dcec;
+    border-radius: 999px;
+    padding: 9px 16px;
+    color: #0f172a;
+    text-decoration: none;
+    font-weight: 700;
+    background: #BAEBFA;
+    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.menu-icon-btn:hover {
+    background: #a9dcec;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(169, 220, 236, 0.72);
+    text-decoration: none;
+}
+
+.icon-home {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.logout-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+.sticky-links ul {
+    margin: 0;
+    justify-content: center;
+}
+
+.home-container {
+    width: 80%;
+    margin: 28px auto;
+}
+
+.header {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    color: #0b1739;
+}
+
+.header form {
+    margin: 14px 0 2px;
+}
+
+.header button {
+    border: 1px solid #a9dcec;
+    border-radius: 999px;
+    padding: 9px 20px;
+    color: #0f172a;
+    font-weight: 800;
+    cursor: pointer;
+    background: #BAEBFA;
+    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
+}
+
+.header button:hover {
+    background: #a9dcec;
+}
+
+.navbar ul {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.navbar a {
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #dbe1ea;
+    color: #1e293b;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.16s ease;
+}
+
+.navbar a:hover {
+    background: #f0fdfa;
+    color: #0b8f97;
+    border-color: #99f6e4;
+}
+
+.content {
+    margin-top: 18px;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.user-info,
+.finance-summary {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.user-info h2,
+.finance-summary h2 {
+    margin: 0 0 14px;
+    color: #0b1739;
+    font-size: 1.25rem;
+}
+
+.user-info p {
+    margin: 10px 0;
+    color: #334155;
+}
+
+.finance-box {
+    display: grid;
+    gap: 12px;
+}
+
+.finance-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.finance-item label {
+    color: #475569;
+    font-weight: 600;
+}
+
+.finance-item span {
+    font-weight: 800;
+}
+
+.balance {
+    color: #1d4ed8;
+}
+
+.income {
+    color: #0f766e;
+}
+
+.expenses {
+    color: #be123c;
+}
+
+@media (max-width: 900px) {
+    .sticky-home-menu-inner {
+        width: 90%;
+        gap: 10px;
+    }
+
+    .sticky-links ul {
+        justify-content: flex-start;
+    }
+
+    .sticky-links {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .home-container {
+        width: 90%;
+    }
+
+    .header {
+        padding: 18px;
+    }
+}
+

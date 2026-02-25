@@ -1,14 +1,123 @@
-/* Login Styles */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400&family=Roboto+Serif:opsz,wght@8..144,300&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    font-family: "Roboto Serif", Georgia, serif;
+    font-weight: 300;
+    color: #0f172a;
+    background: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Comfortaa", "Segoe UI", sans-serif;
+    font-weight: 400;
+}
+
 .login-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #f8fafc;
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(8px);
 }
 
 .login-container h1 {
     text-align: center;
-    color: #333;
+    margin: 0 0 20px;
+    font-size: 1.9rem;
+    letter-spacing: -0.01em;
+    color: #0b1739;
+}
+
+.mensaje {
+    margin-bottom: 14px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.mensaje.error {
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+}
+
+.mensaje.exito {
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #0ea5a8;
+    box-shadow: 0 0 0 3px rgba(14, 165, 168, 0.18);
+}
+
+.btn {
+    width: 100%;
+    border: 1px solid #a9dcec;
+    border-radius: 999px;
+    padding: 11px;
+    cursor: pointer;
+    color: #0f172a;
+    font-weight: 800;
+    background: #BAEBFA;
+    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
+}
+
+.btn:hover {
+    background: #a9dcec;
+}
+
+@media (max-width: 700px) {
+    .login-container {
+        width: 90%;
+    }
+}
+
+.link-registro {
+    margin: 14px 0 0;
+    text-align: center;
+    color: #475569;
+}
+
+.link-registro a {
+    color: #1d4ed8;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.link-registro a:hover {
+    text-decoration: underline;
 }

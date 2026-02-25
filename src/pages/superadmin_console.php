@@ -67,12 +67,14 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consola Superadmin</title>
     <link rel="stylesheet" href="../css/index.css">
 </head>
+
 <body>
     <div class="index-container">
         <h1>Consola de Super-Administrador</h1>
@@ -99,7 +101,12 @@ try {
                 <p>Sin eventos recientes en auditoría.</p>
             <?php else: ?>
                 <table>
-                    <thead><tr><th>Nivel</th><th>Total</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Nivel</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($logCounts as $row): ?>
                             <tr>
@@ -147,7 +154,14 @@ try {
                 <p>No hay logs recientes.</p>
             <?php else: ?>
                 <table>
-                    <thead><tr><th>Fecha</th><th>Acción</th><th>Nivel</th><th>Detalle</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Acción</th>
+                            <th>Nivel</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($recentLogs as $log): ?>
                             <tr>
@@ -165,4 +179,5 @@ try {
         <?php endif; ?>
     </div>
 </body>
+
 </html>

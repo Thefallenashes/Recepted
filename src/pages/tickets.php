@@ -89,12 +89,14 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tickets de Soporte</title>
     <link rel="stylesheet" href="../css/index.css">
 </head>
+
 <body>
     <div class="index-container">
         <h1>Tickets de Soporte</h1>
@@ -173,4 +175,5 @@ try {
         <p><a href="home.php">Volver al inicio</a></p>
     </div>
 </body>
+
 </html>

@@ -200,7 +200,7 @@ function login_from_remember_cookie(PDO $pdo): void
     }
 }
 
-function login_as_debug_guest(PDO $pdo): void
+function login_as_debug(PDO $pdo): void
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         @session_start();
@@ -295,5 +295,3 @@ function clear_remember_tokens(PDO $pdo, ?int $user_id = null): void
 
     set_secure_cookie('remember', '', time() - 3600);
 }
-
-?>

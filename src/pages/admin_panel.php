@@ -75,6 +75,37 @@ try {
 </head>
 
 <body>
+    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
+        <div class="sticky-home-menu-inner">
+            <a class="menu-icon-btn" href="home.php" aria-label="Inicio">
+                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
+                <span>Inicio</span>
+            </a>
+
+            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
+                <span>Cerrar sesión</span>
+            </a>
+
+            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
+                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
+            </button>
+
+            <nav class="sticky-links">
+                <ul>
+                    <li><a href="finanzas.php">Finanzas</a></li>
+                    <li><a href="perfil.php">Perfil</a></li>
+                    <li><a href="tickets.php">Tickets</a></li>
+                    <li><a href="config.php">Configuración</a></li>
+                    <li><a href="admin_panel.php">Panel Admin</a></li>
+                    <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
+                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
     <div class="index-container">
         <h1>Panel de Administrador</h1>
 
@@ -159,6 +190,7 @@ try {
             | <a href="home.php">Volver al inicio</a>
         </p>
     </div>
+    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>

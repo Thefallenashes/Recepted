@@ -90,16 +90,33 @@ try {
 </head>
 
 <body>
-    <header class="sticky-menu">
-        <div class="sticky-menu-inner">
-            <a class="brand-link" href="landing.php">Recepted</a>
-            <nav class="menu-actions">
-                <?php if ($cookie_activa): ?>
-                    <a class="btn" href="home.php">Ir a inicio</a>
-                <?php else: ?>
-                    <a class="btn" href="login.php">Iniciar sesión</a>
-                    <a class="btn secondary" href="register.php">Registrarse</a>
-                <?php endif; ?>
+    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
+        <div class="sticky-home-menu-inner">
+            <a class="menu-icon-btn" href="landing.php" aria-label="Inicio">
+                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
+                <span>Inicio</span>
+            </a>
+
+            <?php if (isset($_SESSION['usuario_id'])): ?>
+                <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+                    <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
+                    <span>Cerrar sesión</span>
+                </a>
+            <?php endif; ?>
+
+            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
+                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
+            </button>
+
+            <nav class="sticky-links">
+                <ul>
+                    <?php if ($cookie_activa || isset($_SESSION['usuario_id'])): ?>
+                        <li><a href="home.php">Ir a inicio</a></li>
+                    <?php else: ?>
+                        <li><a href="login.php">Iniciar sesión</a></li>
+                        <li><a href="register.php">Registrarse</a></li>
+                    <?php endif; ?>
+                </ul>
             </nav>
         </div>
     </header>
@@ -135,6 +152,7 @@ try {
             </ul>
         <?php endif; ?>
     </div>
+    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>

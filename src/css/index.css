@@ -62,32 +62,44 @@ h1, h2, h3, h4, h5, h6 {
 .sticky-home-menu-inner {
     width: 80%;
     margin: 0 auto;
-    padding: 12px 0;
+    padding: 15.4px 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
 }
 
+.menu-toggle-btn {
+    order: 4;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: transparent;
+}
+
 .menu-icon-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid #a9dcec;
+    border: 1px solid #dbe1ea;
     border-radius: 999px;
-    padding: 9px 16px;
-    color: #0f172a;
+    padding: 9.9px 16px;
+    color: #1e293b;
     text-decoration: none;
     font-weight: 700;
-    background: #BAEBFA;
-    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
-    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    background: #ffffff;
+    box-shadow: none;
+    min-height: 42px;
+    line-height: 1;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
 .menu-icon-btn:hover {
-    background: #a9dcec;
-    transform: translateY(-1px);
-    box-shadow: 0 14px 24px rgba(169, 220, 236, 0.72);
+    background: #f0fdfa;
+    color: #0b8f97;
+    border-color: #99f6e4;
     text-decoration: none;
 }
 
@@ -96,13 +108,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .icon-home {
-    display: inline-flex;
+    display: inline-block;
     width: 18px;
     height: 18px;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 1;
+    object-fit: contain;
 }
 
 .logout-icon {
@@ -114,7 +123,29 @@ h1, h2, h3, h4, h5, h6 {
 
 .sticky-links {
     order: 3;
-    margin-left: auto;
+    margin-left: 0;
+}
+
+.menu-toggle-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+.menu-toggle-btn:hover {
+    transform: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+[data-sticky-menu].is-collapsed .sticky-links,
+[data-sticky-menu].is-collapsed .menu-icon-btn.logout-btn {
+    display: none;
+}
+
+[data-sticky-menu].is-collapsed .menu-icon-btn[aria-label="Inicio"] {
+    display: none;
 }
 
 .sticky-links ul {
@@ -135,14 +166,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sticky-links a {
-    display: inline-block;
-    padding: 9px 14px;
+    display: inline-flex;
+    align-items: center;
+    padding: 9.9px 16px;
     border-radius: 999px;
     background: #ffffff;
     border: 1px solid #dbe1ea;
     color: #1e293b;
     text-decoration: none;
     font-weight: 700;
+    min-height: 42px;
+    line-height: 1;
 }
 
 .sticky-links a:hover {

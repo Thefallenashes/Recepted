@@ -1,0 +1,259 @@
+.ae-container {
+    max-width: 1100px;
+    margin: 36px auto;
+    padding: 0 20px;
+}
+
+.ae-container h1 {
+    margin-bottom: 24px;
+}
+
+.ae-controls {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+}
+
+.ae-controls h2 {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+}
+
+.ae-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+}
+
+.ae-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.875rem;
+    color: #475569;
+    min-width: 240px;
+}
+
+.ae-field select {
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #ffffff;
+}
+
+.ae-btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.95rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ae-btn-primary {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.ae-btn-primary:hover:not(:disabled) {
+    background: #1e293b;
+}
+
+.ae-btn-primary:disabled {
+    background: #94a3b8;
+    cursor: default;
+}
+
+.ae-chart-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.ae-type-btn {
+    padding: 7px 18px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.ae-type-btn.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+}
+
+.ae-type-btn:hover:not(.active) {
+    background: #f1f5f9;
+}
+
+.ae-totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+}
+
+.ae-total-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ae-total-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ae-total-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: "Comfortaa", "Segoe UI", sans-serif;
+}
+
+.ae-total-value.pos {
+    color: #16a34a;
+}
+
+.ae-total-value.neg {
+    color: #dc2626;
+}
+
+.ae-total-value.neu {
+    color: #0f172a;
+}
+
+.ae-col-info {
+    font-size: 0.82rem;
+    color: #64748b;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 18px;
+}
+
+.ae-col-info strong {
+    color: #334155;
+}
+
+.ae-chart-area {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 380px;
+}
+
+.ae-canvas-wrap {
+    position: relative;
+    max-height: 460px;
+}
+
+.ae-text-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ae-month-block {
+    padding: 14px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.ae-month-block h3 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+}
+
+.ae-stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.ae-stat-row:last-child {
+    border-bottom: none;
+}
+
+.ae-stat-label {
+    color: #475569;
+}
+
+.ae-stat-val {
+    font-weight: 600;
+    text-align: right;
+}
+
+.ae-stat-val.pos {
+    color: #16a34a;
+}
+
+.ae-stat-val.neg {
+    color: #dc2626;
+}
+
+.ae-msg {
+    text-align: center;
+    color: #64748b;
+    padding: 60px 0;
+}
+
+.ae-msg-error {
+    text-align: center;
+    color: #dc2626;
+    padding: 40px 0;
+}
+
+@media (max-width: 768px) {
+    .ae-container {
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+
+    .ae-controls,
+    .ae-chart-area {
+        padding: 18px;
+    }
+
+    .ae-field {
+        min-width: 100%;
+    }
+
+    .ae-btn {
+        width: 100%;
+    }
+
+    .ae-total-item {
+        width: 100%;
+    }
+
+    .ae-stat-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .ae-stat-val {
+        text-align: left;
+    }
+}

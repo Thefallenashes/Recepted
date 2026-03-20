@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
@@ -56,7 +56,7 @@ try {
                 <span>Inicio</span>
             </a>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -72,10 +72,10 @@ try {
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel Admin</a></li>
+                        <li><a href="admin_panel.php">panel de administrador</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                        <li><a href="superadmin_console.php">Consola</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
@@ -101,3 +101,5 @@ try {
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
+
+

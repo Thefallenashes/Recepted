@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_cookies'])) {
         exit();
     } catch (Exception $e) {
         $mensaje_cookies = 'No se pudieron eliminar las cookies.';
-        error_log('Error al eliminar cookies en index: ' . $e->getMessage());
+        error_log('Error al borrar cookies en index: ' . $e->getMessage());
     }
 }
 
@@ -108,22 +108,22 @@ try {
                 <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
             </button>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
 
             <nav class="sticky-links">
                 <ul>
-                    <li><a href="home.php">Dashboard</a></li>
+                    <li><a href="home.php">Panel de control</a></li>
                     <li><a href="finanzas.php">Finanzas</a></li>
                     <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel Admin</a></li>
+                        <li><a href="admin_panel.php">panel de administrador</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                        <li><a href="superadmin_console.php">Consola</a></li>
                     <?php endif; ?>
                     <li><a href="config.php">Configuración</a></li>
                 </ul>
@@ -142,10 +142,10 @@ try {
         <p>Usuarios registrados: <?php echo (int)$total_users; ?></p>
         <p>Archivos subidos: <?php echo (int)$total_uploads; ?></p>
         <form method="POST" action="">
-            <button type="submit" name="debug" value="1" class="btn">Debug</button>
+            <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
         </form>
         <form method="POST" action="">
-            <button type="submit" name="clear_cookies" value="1" class="btn">Eliminar cookies</button>
+            <button type="submit" name="clear_cookies" value="1" class="btn">Borrar cookies</button>
         </form>
 
         <?php if ($debug_activo): ?>
@@ -166,4 +166,5 @@ try {
 </body>
 
 </html>
+
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 require_once __DIR__ . '/../utils/db.php';
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_cookies'])) {
         exit();
     } catch (Exception $e) {
         $mensaje_cookies = 'No se pudieron eliminar las cookies.';
-        error_log('Error al eliminar cookies en landing: ' . $e->getMessage());
+        error_log('Error al borrar cookies en landing: ' . $e->getMessage());
     }
 }
 
@@ -54,7 +54,7 @@ if ($debug_activo) {
     if (is_array($archivos)) {
         foreach ($archivos as $archivo) {
             $nombre = basename($archivo);
-            $requiere_parametro = in_array($nombre, ['download.php', 'delete_upload.php'], true);
+            $requiere_parametro = in_array($nombre, ['scripts/download.php', 'scripts/delete_upload.php'], true);
             $paginas_debug[] = [
                 'nombre' => $nombre,
                 'requiere_parametro' => $requiere_parametro,
@@ -98,7 +98,7 @@ try {
             </a>
 
             <?php if (isset($_SESSION['usuario_id'])): ?>
-                <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+                <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                     <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                     <span>Cerrar sesión</span>
                 </a>
@@ -111,7 +111,7 @@ try {
             <nav class="sticky-links">
                 <ul>
                     <?php if ($cookie_activa || isset($_SESSION['usuario_id'])): ?>
-                        <li><a href="home.php">Ir a inicio</a></li>
+                        <li><a href="home.php">Ir al inicio</a></li>
                     <?php else: ?>
                         <li><a href="login.php">Iniciar sesión</a></li>
                         <li><a href="register.php">Registrarse</a></li>
@@ -132,14 +132,14 @@ try {
         <p>Usuarios registrados: <?php echo (int)$total_users; ?></p>
         <p>Archivos subidos: <?php echo (int)$total_uploads; ?></p>
         <form method="POST" action="">
-            <button type="submit" name="debug" value="1" class="btn">Debug</button>
+            <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
         </form>
         <form method="POST" action="">
-            <button type="submit" name="clear_cookies" value="1" class="btn">Eliminar cookies</button>
+            <button type="submit" name="clear_cookies" value="1" class="btn">Borrar cookies</button>
         </form>
 
         <?php if ($debug_activo): ?>
-            <h2>Enlaces Debug</h2>
+            <h2>Enlaces Modo de desarollo</h2>
             <ul>
                 <?php foreach ($paginas_debug as $pagina): ?>
                     <li>
@@ -156,3 +156,4 @@ try {
 </body>
 
 </html>
+

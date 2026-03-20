@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
@@ -56,7 +56,7 @@ try {
 } catch (PDOException $e) {
     error_log('Error admin panel: ' . $e->getMessage());
     $tipo = 'error';
-    $mensaje = 'No se pudo cargar el panel de administración.';
+    $mensaje = 'No se pudo cargar el panel de administrador.';
     $usersCount = 0;
     $uploadsCount = 0;
     $openTickets = 0;
@@ -70,7 +70,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración</title>
+    <title>Panel de Administrador</title>
     <link rel="stylesheet" href="../css/index.css">
 </head>
 
@@ -82,7 +82,7 @@ try {
                 <span>Inicio</span>
             </a>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -97,9 +97,9 @@ try {
                     <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
-                    <li><a href="admin_panel.php">Panel Admin</a></li>
+                    <li><a href="admin_panel.php">panel de administrador</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                        <li><a href="superadmin_console.php">Consola</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
@@ -185,7 +185,7 @@ try {
         <p>
             <a href="tickets.php">Gestionar tickets</a>
             <?php if (has_min_role('superadmin')): ?>
-                | <a href="superadmin_console.php">Consola superadmin</a>
+                | <a href="superadmin_console.php">Consola</a>
             <?php endif; ?>
             | <a href="home.php">Volver al inicio</a>
         </p>
@@ -194,3 +194,4 @@ try {
 </body>
 
 </html>
+

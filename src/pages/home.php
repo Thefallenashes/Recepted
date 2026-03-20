@@ -51,7 +51,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Dashboard</title>
+    <title>Panel de control</title>
     <link rel="stylesheet" href="../css/home.css">
 </head>
 
@@ -73,16 +73,16 @@ try {
                     <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel Admin</a></li>
+                        <li><a href="admin_panel.php">panel de administrador</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                        <li><a href="superadmin_console.php">Consola</a></li>
                     <?php endif; ?>
                     <li><a href="config.php">Configuración</a></li>
                 </ul>
             </nav>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -93,7 +93,7 @@ try {
         <header class="header">
             <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
             <form method="POST" action="" style="margin: 10px 0;">
-                <button type="submit" name="debug" value="1">Debug</button>
+                <button type="submit" name="debug" value="1">Modo de desarollo</button>
             </form>
         </header>
 
@@ -135,4 +135,5 @@ try {
 </body>
 
 </html>
+
 

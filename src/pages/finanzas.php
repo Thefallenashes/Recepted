@@ -11,6 +11,12 @@ if (!isset($_SESSION['usuario_id'])) {
 $mensaje = '';
 $tipo = '';
 
+if (isset($_SESSION['finanzas_flash']) && is_array($_SESSION['finanzas_flash'])) {
+    $mensaje = (string)($_SESSION['finanzas_flash']['mensaje'] ?? '');
+    $tipo = (string)($_SESSION['finanzas_flash']['tipo'] ?? '');
+    unset($_SESSION['finanzas_flash']);
+}
+
 function categorize_transaction(string $description, string $type): string
 {
     $text = mb_strtolower(trim($description));
@@ -50,18 +56,42 @@ try {
     $pdo = getPDO();
 
     // Asegurar tablas para funcionalidad avanzada
+    $pdo->exec("CREATE TABLE IF NOT EXISTS expense_categories (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT UNSIGNED NOT NULL,
+        name VARCHAR(80) NOT NULL,
+        color VARCHAR(7) NOT NULL DEFAULT '#4CAF50',
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        INDEX idx_categories_user (user_id),
+        UNIQUE KEY unique_user_category (user_id, name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS transactions (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id BIGINT UNSIGNED NOT NULL,
         type ENUM('income','expense') NOT NULL,
         amount DECIMAL(14,2) NOT NULL,
         category VARCHAR(80) NOT NULL,
+        category_id BIGINT UNSIGNED NULL,
         description VARCHAR(255) NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         INDEX idx_transactions_user (user_id),
-        INDEX idx_transactions_category (category)
+        INDEX idx_transactions_category (category),
+        INDEX idx_transactions_category_id (category_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    // Agregar columna category_id si no existe
+    $checkColumn = $pdo->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME='category_id'");
+    if ($checkColumn->rowCount() === 0) {
+        try {
+            $pdo->exec("ALTER TABLE transactions ADD COLUMN category_id BIGINT UNSIGNED NULL AFTER category");
+            $pdo->exec("ALTER TABLE transactions ADD INDEX idx_transactions_category_id (category_id)");
+        } catch (PDOException $e) {
+            // Columna ya existe
+        }
+    }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS savings_goals (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -79,6 +109,62 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
+        $isAjax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
+
+        if ($action === 'add_category') {
+            $categoryName = trim($_POST['category_name'] ?? '');
+
+            if ($categoryName === '') {
+                $tipo = 'error';
+                $mensaje = 'El nombre de la categoría es necesario.';
+            } else {
+                try {
+                       $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, name) VALUES (:user_id, :name)');
+                    $stmt->execute([
+                        'user_id' => $userId,
+                        'name' => $categoryName,
+                    ]);
+                    $tipo = 'exito';
+                    $mensaje = 'Categoría creada correctamente.';
+                } catch (PDOException $e) {
+                    if (strpos($e->getMessage(), 'Duplicate') !== false) {
+                        $tipo = 'error';
+                        $mensaje = 'Esta categoría ya existe.';
+                    } else {
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        if ($action === 'delete_category') {
+            $deleteCategoryId = (int)($_POST['selected_category_id'] ?? 0);
+
+            if ($deleteCategoryId <= 0) {
+                $tipo = 'error';
+                $mensaje = 'Selecciona una categoría válida para eliminar.';
+            } else {
+                $stmt = $pdo->prepare('UPDATE transactions SET category_id = NULL WHERE user_id = :user_id AND category_id = :category_id');
+                $stmt->execute([
+                    'user_id' => $userId,
+                    'category_id' => $deleteCategoryId,
+                ]);
+
+                $stmt = $pdo->prepare('DELETE FROM expense_categories WHERE id = :id AND user_id = :user_id');
+                $stmt->execute([
+                    'id' => $deleteCategoryId,
+                    'user_id' => $userId,
+                ]);
+
+                if ($stmt->rowCount() > 0) {
+                    $tipo = 'exito';
+                    $mensaje = 'Categoría eliminada correctamente.';
+                } else {
+                    $tipo = 'error';
+                    $mensaje = 'No se pudo eliminar la categoría seleccionada.';
+                }
+            }
+        }
 
         if ($action === 'add_transaction') {
             $type = $_POST['type'] ?? 'expense';
@@ -88,18 +174,34 @@ try {
 
             $amount = (float)($_POST['amount'] ?? 0);
             $description = trim($_POST['description'] ?? '');
+            $categoryId = (int)($_POST['category_id'] ?? 0);
 
-            if ($amount <= 0 || $description === '') {
+            if ($amount <= 0 || $categoryId <= 0) {
                 $tipo = 'error';
-                $mensaje = 'Debes indicar descripción y un importe mayor que 0.';
+                $mensaje = 'Debes seleccionar una categoría y un importe mayor que 0.';
             } else {
+                $categoryIdToUse = $categoryId;
                 $category = categorize_transaction($description, $type);
-                $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, description) VALUES (:user_id, :type, :amount, :category, :description)');
+
+                if ($categoryIdToUse !== null) {
+                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id LIMIT 1');
+                    $stmt->execute([
+                        'id' => $categoryIdToUse,
+                        'user_id' => $userId,
+                    ]);
+                    $customCategoryName = $stmt->fetchColumn();
+                    if (is_string($customCategoryName) && $customCategoryName !== '') {
+                        $category = $customCategoryName;
+                    }
+                }
+                
+                $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
                 $stmt->execute([
                     'user_id' => $userId,
                     'type' => $type,
                     'amount' => $amount,
                     'category' => $category,
+                    'category_id' => $categoryIdToUse,
                     'description' => $description,
                 ]);
 
@@ -109,6 +211,42 @@ try {
 
                 $tipo = 'exito';
                 $mensaje = 'Transacción añadida correctamente.';
+            }
+        }
+
+        if ($action === 'delete_transaction') {
+            $transactionId = (int)($_POST['transaction_id'] ?? 0);
+
+            if ($transactionId <= 0) {
+                $tipo = 'error';
+                $mensaje = 'ID de transacción inválido.';
+            } else {
+                $stmt = $pdo->prepare('DELETE FROM transactions WHERE id = :id AND user_id = :user_id');
+                $stmt->execute([
+                    'id' => $transactionId,
+                    'user_id' => $userId,
+                ]);
+
+                if ($stmt->rowCount() > 0) {
+                    if (function_exists('record_audit_log')) {
+                        record_audit_log($pdo, 'transaction_deleted', 'info', 'Transacción eliminada');
+                    }
+                    $tipo = 'exito';
+                    $mensaje = 'Transacción eliminada correctamente.';
+                } else {
+                    $tipo = 'error';
+                    $mensaje = 'No se pudo eliminar la transacción.';
+                }
+            }
+
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'ok' => $tipo === 'exito',
+                    'mensaje' => $mensaje,
+                    'transaction_id' => $transactionId,
+                ], JSON_UNESCAPED_UNICODE);
+                exit();
             }
         }
 
@@ -152,6 +290,15 @@ try {
                 $mensaje = 'Avance de meta actualizado.';
             }
         }
+
+        if (!$isAjax) {
+            $_SESSION['finanzas_flash'] = [
+                'tipo' => $tipo,
+                'mensaje' => $mensaje,
+            ];
+            header('Location: finanzas.php');
+            exit();
+        }
     }
 
     // Recalcular resumen financiero automáticamente desde transacciones
@@ -177,9 +324,30 @@ try {
     $stmt = $pdo->prepare('SELECT * FROM finanzas WHERE user_id = :user_id');
     $stmt->execute(['user_id' => $userId]);
     $finanzas = $stmt->fetch();
+    if (!$finanzas) {
+        $finanzas = [
+            'balance' => 0,
+            'income' => 0,
+            'expenses' => 0,
+            'currency' => 'EUR',
+        ];
+    }
 
-    $stmt = $pdo->prepare('SELECT id, type, amount, category, description, created_at FROM transactions WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 20');
+    // Obtener categorías personalizadas del usuario
+    $stmt = $pdo->prepare('SELECT id, name, color FROM expense_categories WHERE user_id = :user_id ORDER BY name ASC');
     $stmt->execute(['user_id' => $userId]);
+    $personalCategories = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare("SELECT t.id, t.type, t.amount, t.category, t.description, t.created_at, t.category_id, COALESCE(ec.name, t.category) AS display_category
+        FROM transactions t
+        LEFT JOIN expense_categories ec ON ec.id = t.category_id AND ec.user_id = :category_owner
+        WHERE t.user_id = :transaction_owner
+        ORDER BY t.created_at DESC
+        LIMIT 20");
+    $stmt->execute([
+        'category_owner' => $userId,
+        'transaction_owner' => $userId,
+    ]);
     $transactions = $stmt->fetchAll();
 
     $stmt = $pdo->prepare("SELECT category, SUM(amount) AS total FROM transactions WHERE user_id = :user_id AND type = 'expense' GROUP BY category ORDER BY total DESC");
@@ -191,6 +359,59 @@ try {
         $maxCategoryTotal = max($maxCategoryTotal, (float)$row['total']);
     }
 
+    // Obtener gastos agrupados por categoría personalizada
+    $stmt = $pdo->prepare("
+        SELECT 
+            ec.id,
+            ec.name,
+            COALESCE(SUM(t.amount), 0) AS total,
+            COUNT(t.id) AS transaction_count
+        FROM expense_categories ec
+        LEFT JOIN transactions t ON ec.id = t.category_id AND t.type = 'expense'
+        WHERE ec.user_id = :user_id
+           GROUP BY ec.id, ec.name
+        ORDER BY total DESC
+    ");
+    $stmt->execute(['user_id' => $userId]);
+    $expensesByPersonalCategory = $stmt->fetchAll();
+
+    // Obtener transacciones por categoría personalizada para expandir
+    $transactionsByCategory = [];
+    if (!empty($expensesByPersonalCategory)) {
+        foreach ($expensesByPersonalCategory as $cat) {
+            $catId = (int)$cat['id'];
+            $stmt = $pdo->prepare("
+                SELECT id, amount, description, created_at 
+                FROM transactions 
+                WHERE category_id = :category_id AND type = 'expense'
+                ORDER BY created_at DESC
+            ");
+            $stmt->execute(['category_id' => $catId]);
+            $transactionsByCategory[$catId] = $stmt->fetchAll();
+        }
+    }
+
+    $chartSeriesByCategory = [];
+    foreach ($expensesByPersonalCategory as $cat) {
+        $catId = (int)$cat['id'];
+        $series = [];
+        $runningTotal = 0.0;
+        if (!empty($transactionsByCategory[$catId])) {
+            $txAsc = array_reverse($transactionsByCategory[$catId]);
+            foreach ($txAsc as $txItem) {
+                $runningTotal += (float)$txItem['amount'];
+                $series[] = [
+                    'label' => substr((string)$txItem['created_at'], 0, 10),
+                    'value' => $runningTotal,
+                ];
+            }
+        }
+        if (empty($series)) {
+            $series[] = ['label' => 'Sin datos', 'value' => 0];
+        }
+        $chartSeriesByCategory[$catId] = $series;
+    }
+
     $stmt = $pdo->prepare('SELECT id, name, target_amount, current_amount, target_date FROM savings_goals WHERE user_id = :user_id ORDER BY created_at DESC');
     $stmt->execute(['user_id' => $userId]);
     $goals = $stmt->fetchAll();
@@ -198,10 +419,18 @@ try {
     error_log('Error finanzas: ' . $e->getMessage());
     $tipo = 'error';
     $mensaje = 'No se pudo procesar la información financiera avanzada.';
-    $finanzas = null;
+    $finanzas = [
+        'balance' => 0,
+        'income' => 0,
+        'expenses' => 0,
+        'currency' => 'EUR',
+    ];
+    $personalCategories = [];
     $transactions = [];
     $expenseByCategory = [];
     $maxCategoryTotal = 0.0;
+    $expensesByPersonalCategory = [];
+    $transactionsByCategory = [];
     $goals = [];
 }
 
@@ -235,7 +464,7 @@ try {
                 </ul>
             </nav>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -270,7 +499,7 @@ try {
                 <input type="hidden" name="action" value="add_transaction">
                 <div class="form-group">
                     <label for="type">Tipo</label>
-                    <select id="type" name="type">
+                    <select id="type" name="type" onchange="updateCategorySelector()">
                         <option value="expense" selected>Gasto</option>
                         <option value="income">Ingreso</option>
                     </select>
@@ -280,28 +509,102 @@ try {
                     <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
                 </div>
                 <div class="form-group">
+                    <label for="category_id">Categoría</label>
+                    <select id="category_id" name="category_id" required>
+                        <option value="" selected disabled hidden></option>
+                        <?php foreach ($personalCategories as $cat): ?>
+                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="description">Descripción</label>
-                    <input id="description" name="description" required placeholder="Ejemplo: Supermercado semanal">
+                    <input id="description" name="description">
                 </div>
                 <button class="btn" type="submit">Guardar transacción</button>
             </form>
 
             <h2>Gastos por categoría</h2>
-            <?php if (empty($expenseByCategory)): ?>
-                <p>Todavía no hay gastos categorizados.</p>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; margin: 0 0 12px 0; color: #475569;">Crear nueva categoría</h3>
+                <form method="POST" action="" class="panel-form" style="margin: 0;">
+                    <input type="hidden" name="action" value="add_category">
+                       <div style="display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="category_name">Nombre</label>
+                            <input id="category_name" name="category_name" required>
+                        </div>
+                        <button class="btn" type="submit" style="margin: 0;">Crear</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel-form" style="margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; margin: 0 0 12px 0; color: #475569;">Selector único de categorías</h3>
+                <?php if (empty($personalCategories)): ?>
+                    <p>No hay categorías para mostrar en el gráfico.</p>
+                <?php else: ?>
+                    <div class="category-selector-row">
+                        <select id="selected_category_id" name="selected_category_id" class="category-select" onchange="renderCategoryLineChart()">
+                            <option value="" selected disabled>Elije una categoria</option>
+                            <?php foreach ($personalCategories as $cat): ?>
+                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
+                            <input type="hidden" name="action" value="delete_category">
+                            <input type="hidden" name="selected_category_id" id="delete_selected_category_id" value="">
+                            <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
+                        </form>
+                    </div>
+                    <canvas id="categoryLineChart" height="190"></canvas>
+                <?php endif; ?>
+            </div>
+
+            <?php if (empty($expensesByPersonalCategory)): ?>
+                <p>No tienes categorías personalizadas aún.</p>
             <?php else: ?>
-                <div class="chart-list">
-                    <?php foreach ($expenseByCategory as $item): ?>
+                <div class="category-expenses-list">
+                    <?php foreach ($expensesByPersonalCategory as $index => $cat): ?>
                         <?php
-                            $total = (float)$item['total'];
-                            $width = $maxCategoryTotal > 0 ? ($total / $maxCategoryTotal) * 100 : 0;
+                            $catId = (int)$cat['id'];
+                            $total = (float)$cat['total'];
+                            $hasTransactions = !empty($transactionsByCategory[$catId]) && count($transactionsByCategory[$catId]) > 0;
                         ?>
-                        <div class="chart-row">
-                            <span class="chart-label"><?php echo htmlspecialchars($item['category']); ?></span>
-                            <div class="chart-bar-wrap">
-                                <div class="chart-bar" style="width: <?php echo number_format($width, 2, '.', ''); ?>%;"></div>
+                           <div class="category-card">
+                            <div class="category-header" onclick="toggleCategory(<?php echo $catId; ?>)" style="cursor: pointer;">
+                                <div class="category-title-bar">
+                                       <span class="category-name"><?php echo htmlspecialchars($cat['name']); ?></span>
+                                    <span class="toggle-icon" id="toggle-<?php echo $catId; ?>">▼</span>
+                                </div>
                             </div>
-                            <span class="chart-value"><?php echo number_format($total, 2); ?></span>
+                            <?php if ($hasTransactions): ?>
+                                <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
+                                    <div class="transactions-list">
+                                        <?php foreach ($transactionsByCategory[$catId] as $tx): ?>
+                                            <div class="transaction-item">
+                                                <span class="tx-date"><?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?></span>
+                                                <span class="tx-description"><?php echo htmlspecialchars($tx['description']); ?></span>
+                                                <span class="tx-amount"><?php echo number_format((float)$tx['amount'], 2); ?></span>
+                                                <form method="POST" action="" class="js-delete-transaction-form" style="display: inline; margin: 0;">
+                                                    <input type="hidden" name="action" value="delete_transaction">
+                                                    <input type="hidden" name="transaction_id" value="<?php echo (int)$tx['id']; ?>">
+                                                    <button type="submit" class="tx-delete-btn" onclick="return confirm('¿Eliminar esta transacción?');">Eliminar</button>
+                                                </form>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="category-stats">
+                                        <strong>Total: <?php echo number_format($total, 2); ?> EUR</strong> | 
+                                        <strong>Transacciones: <?php echo (int)$cat['transaction_count']; ?></strong>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
+                                    <p style="padding: 10px; color: #999;">No hay transacciones en esta categoría</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -312,7 +615,7 @@ try {
                 <input type="hidden" name="action" value="add_goal">
                 <div class="form-group">
                     <label for="goal_name">Nombre de la meta</label>
-                    <input id="goal_name" name="goal_name" required placeholder="Viaje de verano">
+                    <input id="goal_name" name="goal_name">
                 </div>
                 <div class="form-group">
                     <label for="target_amount">Importe objetivo</label>
@@ -384,7 +687,7 @@ try {
                                 <td><?php echo htmlspecialchars($tx['created_at']); ?></td>
                                 <td><?php echo htmlspecialchars($tx['type']); ?></td>
                                 <td><?php echo number_format((float)$tx['amount'], 2); ?></td>
-                                <td><?php echo htmlspecialchars($tx['category']); ?></td>
+                                <td><?php echo htmlspecialchars($tx['display_category']); ?></td>
                                 <td><?php echo htmlspecialchars($tx['description'] ?? ''); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -397,6 +700,169 @@ try {
 
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
+    <script>
+        const categorySeries = <?php echo json_encode($chartSeriesByCategory, JSON_UNESCAPED_UNICODE); ?>;
+
+        function toggleCategory(categoryId) {
+            const details = document.getElementById('details-' + categoryId);
+            const toggle = document.getElementById('toggle-' + categoryId);
+            
+            if (details.style.display === 'none' || details.style.display === '') {
+                details.style.display = 'block';
+                toggle.textContent = '▲';
+            } else {
+                details.style.display = 'none';
+                toggle.textContent = '▼';
+            }
+        }
+
+        function updateCategorySelector() {
+            const typeSelect = document.getElementById('type');
+            const categorySelect = document.getElementById('category_id');
+            
+            if (typeSelect.value === 'expense') {
+                categorySelect.parentElement.style.display = 'block';
+            } else {
+                categorySelect.parentElement.style.display = 'none';
+            }
+        }
+
+        function renderCategoryLineChart() {
+            const selector = document.getElementById('selected_category_id');
+            const deleteHidden = document.getElementById('delete_selected_category_id');
+            const deleteButton = document.getElementById('delete_selected_category_btn');
+            const canvas = document.getElementById('categoryLineChart');
+
+            if (!selector || !canvas) {
+                return;
+            }
+
+            deleteHidden.value = selector.value;
+            if (deleteButton) {
+                deleteButton.disabled = selector.value === '';
+            }
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const cssWidth = canvas.clientWidth || 640;
+            const cssHeight = 190;
+
+            canvas.width = Math.floor(cssWidth * dpr);
+            canvas.height = Math.floor(cssHeight * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, cssWidth, cssHeight);
+
+            if (selector.value === '') {
+                return;
+            }
+
+            const points = categorySeries[selector.value] || [{ label: 'Sin datos', value: 0 }];
+
+            const padding = 24;
+            const plotWidth = cssWidth - padding * 2;
+            const plotHeight = cssHeight - padding * 2;
+            const values = points.map((p) => Number(p.value || 0));
+            const maxVal = Math.max(...values, 1);
+
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, cssHeight - padding);
+            ctx.lineTo(cssWidth - padding, cssHeight - padding);
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, cssHeight - padding);
+            ctx.stroke();
+
+            if (points.length === 1) {
+                const x = padding + plotWidth / 2;
+                const y = cssHeight - padding - (values[0] / maxVal) * plotHeight;
+                ctx.fillStyle = '#0ea5a8';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                return;
+            }
+
+            ctx.strokeStyle = '#0ea5a8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            points.forEach((p, i) => {
+                const x = padding + (i / (points.length - 1)) * plotWidth;
+                const y = cssHeight - padding - (Number(p.value || 0) / maxVal) * plotHeight;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+
+            ctx.fillStyle = '#0ea5a8';
+            points.forEach((p, i) => {
+                const x = padding + (i / (points.length - 1)) * plotWidth;
+                const y = cssHeight - padding - (Number(p.value || 0) / maxVal) * plotHeight;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function bindDynamicDeleteTransaction() {
+            const forms = document.querySelectorAll('.js-delete-transaction-form');
+            forms.forEach((form) => {
+                form.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    const button = form.querySelector('.tx-delete-btn');
+                    if (!button) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    const formData = new FormData(form);
+                    formData.append('ajax', '1');
+
+                    try {
+                        const response = await fetch('finanzas.php', {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Error al eliminar transacción');
+                        }
+
+                        const data = await response.json();
+                        if (data && data.ok) {
+                            const row = form.closest('.transaction-item');
+                            if (row) {
+                                const list = row.closest('.transactions-list');
+                                row.remove();
+
+                                if (list && list.children.length === 0) {
+                                    list.innerHTML = '<p style="padding: 10px; color: #999;">No hay transacciones en esta categoría</p>';
+                                }
+                            }
+                        } else {
+                            button.disabled = false;
+                        }
+                    } catch (error) {
+                        button.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // Inicializar al cargar la página
+        window.addEventListener('DOMContentLoaded', function() {
+            updateCategorySelector();
+            renderCategoryLineChart();
+            bindDynamicDeleteTransaction();
+        });
+    </script>
 </body>
 </html>
 

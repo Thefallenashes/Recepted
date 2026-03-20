@@ -79,7 +79,7 @@ try {
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
-                    <li><a href="upload.php">Subir archivo</a></li>
+                    <li><a href="scripts/upload.php">Subir archivo</a></li>
                     <li><a href="mis_uploads.php">Mis archivos</a></li>
                     <li><a href="config.php">Configuración</a></li>
                 </ul>

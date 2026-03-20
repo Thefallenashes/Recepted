@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
@@ -26,7 +26,7 @@ try {
 
         if ($mfaInput !== '' && hash_equals($expected, $mfaInput) && time() <= $expires) {
             $_SESSION['mfa_superadmin_verified'] = true;
-            record_audit_log($pdo, 'superadmin_mfa_verified', 'warning', 'Segundo factor validado en consola superadmin');
+            record_audit_log($pdo, 'superadmin_mfa_verified', 'warning', 'Segundo factor validado en Consola');
             $tipo = 'exito';
             $mensaje = 'MFA validado correctamente.';
         } else {
@@ -71,7 +71,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consola Superadmin</title>
+    <title>Consola</title>
     <link rel="stylesheet" href="../css/index.css">
 </head>
 
@@ -83,7 +83,7 @@ try {
                 <span>Inicio</span>
             </a>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -98,8 +98,8 @@ try {
                     <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
-                    <li><a href="admin_panel.php">Panel Admin</a></li>
-                    <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                    <li><a href="admin_panel.php">panel de administrador</a></li>
+                    <li><a href="superadmin_console.php">Consola</a></li>
                 </ul>
             </nav>
         </div>
@@ -204,10 +204,11 @@ try {
                 </table>
             <?php endif; ?>
 
-            <p><a href="admin_panel.php">Panel admin</a> | <a href="home.php">Volver al inicio</a></p>
+            <p><a href="admin_panel.php">panel de administrador</a> | <a href="home.php">Volver al inicio</a></p>
         <?php endif; ?>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
@@ -38,7 +38,7 @@ try {
                 <span>Inicio</span>
             </a>
 
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
+            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
                 <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
                 <span>Cerrar sesión</span>
             </a>
@@ -54,10 +54,10 @@ try {
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel Admin</a></li>
+                        <li><a href="admin_panel.php">panel de administrador</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola Superadmin</a></li>
+                        <li><a href="superadmin_console.php">Consola</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
@@ -68,7 +68,7 @@ try {
         <h1>Mis archivos</h1>
 
         <?php if (empty($uploads)): ?>
-            <p>No has subido archivos todavía.</p>
+            <p>Aún no hay ningun archivo ¡Sube uno y comienza a mejorar tus finazas!</p>
         <?php else: ?>
             <table>
                 <thead>
@@ -88,9 +88,16 @@ try {
                             <td><?php echo htmlspecialchars($up['mime']); ?></td>
                             <td><?php echo htmlspecialchars($up['uploaded_at']); ?></td>
                             <td>
-                                <a href="download.php?id=<?php echo $up['id']; ?>">Descargar</a>
+                                <a href="scripts/download.php?id=<?php echo $up['id']; ?>">Descargar</a>
+                                <?php
+                                $excelExts = ['csv','xlsb','xltx','xls','xlsm','xlsx'];
+                                $fileExt   = strtolower(pathinfo($up['filename'], PATHINFO_EXTENSION));
+                                if (in_array($fileExt, $excelExts, true)):
+                                ?>
+                                | <a href="analizar_excel.php?id=<?php echo $up['id']; ?>">Analizar</a>
+                                <?php endif; ?>
                                 |
-                                <form method="POST" action="delete_upload.php" style="display:inline" onsubmit="return confirm('¿Eliminar archivo?');">
+                                <form method="POST" action="scripts/delete_upload.php" style="display:inline" onsubmit="return confirm('¿Eliminar archivo?');">
                                     <input type="hidden" name="id" value="<?php echo $up['id']; ?>">
                                     <button type="submit">Eliminar</button>
                                 </form>
@@ -101,8 +108,10 @@ try {
             </table>
         <?php endif; ?>
 
-        <p><a href="upload.php">Subir nuevo archivo</a> | <a href="perfil.php">Volver al perfil</a> | <a href="logout.php">Cerrar Sesión</a></p>
+        <p><a href="scripts/upload.php">Subir nuevo archivo</a> | <a href="analizar_excel.php">Analizar Excel</a> | <a href="perfil.php">Volver al perfil</a> | <a href="scripts/logout.php">Cerrar Sesión</a></p>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
+
+

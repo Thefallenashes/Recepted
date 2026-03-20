@@ -1,5 +1,3 @@
--- Inicialización de la base de datos para TFG
--- Crea la base de datos y las tablas: users, finanzas (1:1 con users), uploads
 
 CREATE DATABASE IF NOT EXISTS `tfg_db`
   CHARACTER SET = utf8mb4
@@ -49,11 +47,10 @@ CREATE TABLE IF NOT EXISTS `uploads` (
   CONSTRAINT `fk_uploads_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Ejemplo: insertar datos de prueba (opcional)
 -- INSERT INTO `users` (`correo`, `nombre`, `apellidos`, `edad`, `role`, `password`) VALUES
 -- ('test@example.com', 'Test', 'Usuario', 30, 'user', '$2y$10$...');
 
--- Tabla para tokens de inicio de sesión persistente (remember me)
+-- Tabla para tokens de sesión 
 CREATE TABLE IF NOT EXISTS `auth_tokens` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,
@@ -67,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `auth_tokens` (
   CONSTRAINT `fk_auth_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabla de auditoría de seguridad y cumplimiento
+-- Tabla de auditoría de seguridad
 CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NULL,
@@ -87,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   CONSTRAINT `fk_audit_target_user` FOREIGN KEY (`target_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabla de tickets de soporte/incidencias
+-- Tabla de tickets de soporte
 CREATE TABLE IF NOT EXISTS `support_tickets` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `created_by` BIGINT UNSIGNED NOT NULL,
@@ -106,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `support_tickets` (
   CONSTRAINT `fk_ticket_assigned_to` FOREIGN KEY (`assigned_to`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabla de transacciones para analítica de gastos/ingresos
+-- Tabla para analítica de gastos/ingresos
 CREATE TABLE IF NOT EXISTS `transactions` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,
@@ -121,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   CONSTRAINT `fk_transactions_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabla de metas de ahorro
+-- Tabla de metas
 CREATE TABLE IF NOT EXISTS `savings_goals` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,

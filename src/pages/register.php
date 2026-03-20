@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 require_once __DIR__ . '/../utils/db.php';
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn">Registrarse</button>
             <div class="form-group">
                 <label>
-                    <input type="checkbox" name="remember" value="1" checked> Recordarme por 3 días
+                    <input type="checkbox" name="remember" value="1" checked> Recuerdame
                 </label>
             </div>
         </form>
@@ -190,3 +190,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </body>
 </html>
+

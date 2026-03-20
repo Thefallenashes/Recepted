@@ -1,13 +1,7 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../../utils/db.php';
-require_once __DIR__ . '/../../utils/auth.php';
+require_once __DIR__ . '/script_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(403);
-    echo 'Acceso denegado.';
-    exit();
-}
+$userId = require_script_user('http403');
 
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -18,28 +12,15 @@ if ($id <= 0) {
 
 try {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('SELECT * FROM uploads WHERE id = :id');
-    $stmt->execute(['id' => $id]);
-    $row = $stmt->fetch();
-
+    $row = get_accessible_upload($pdo, $id, $userId);
     if (!$row) {
         http_response_code(404);
-        echo 'Archivo no encontrado.';
+        echo 'Archivo no encontrado o sin permisos.';
         exit();
     }
 
-    // Verificar propietario o rol admin/superadmin
-    $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
-    if ($row['user_id'] != $_SESSION['usuario_id'] && !$isAdmin) {
-        http_response_code(403);
-        echo 'No tienes permiso para descargar este archivo.';
-        exit();
-    }
-
-    $relative = $row['filepath']; // e.g. uploads/abc.png
-    $file = dirname(__DIR__, 2) . '/' . $relative; // points to src/uploads/...
-
-    if (!is_file($file)) {
+    $file = resolve_upload_realpath((string)$row['filepath']);
+    if ($file === null) {
         http_response_code(404);
         echo 'Archivo físico no encontrado.';
         exit();

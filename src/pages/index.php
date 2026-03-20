@@ -3,6 +3,8 @@ session_start();
 
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/query_helpers.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: landing.php');
@@ -76,11 +78,8 @@ if ($debug_activo) {
 // Página pública: mostrar estadísticas básicas
 try {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT COUNT(*) AS total_users FROM users');
-    $total_users = $stmt->fetchColumn();
-
-    $stmt = $pdo->query('SELECT COUNT(*) AS total_uploads FROM uploads');
-    $total_uploads = $stmt->fetchColumn();
+    $total_users = fetch_total_users($pdo);
+    $total_uploads = fetch_total_uploads($pdo);
 } catch (PDOException $e) {
     $total_users = 0;
     $total_uploads = 0;
@@ -97,38 +96,22 @@ try {
 </head>
 
 <body>
-    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-home-menu-inner">
-            <a class="menu-icon-btn" href="landing.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
-                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                <span>Cerrar sesión</span>
-            </a>
-
-            <nav class="sticky-links">
-                <ul>
-                    <li><a href="home.php">Panel de control</a></li>
-                    <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="tickets.php">Tickets</a></li>
-                    <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel de administracion</a></li>
-                    <?php endif; ?>
-                    <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola</a></li>
-                    <?php endif; ?>
-                    <li><a href="config.php">Configuración</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu',
+        'inner_class' => 'sticky-home-menu-inner',
+        'home_href' => 'landing.php',
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => [
+            ['href' => 'home.php', 'label' => 'Panel de control'],
+            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
+            ['href' => 'tickets.php', 'label' => 'Tickets'],
+            ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],
+            ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
+            ['href' => 'config.php', 'label' => 'Configuración'],
+        ],
+    ]);
+    ?>
 
     <div class="index-container">
         <h1>Índice</h1>

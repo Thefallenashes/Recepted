@@ -3,6 +3,8 @@ session_start();
 
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/query_helpers.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 $mensaje_debug = '';
 $mensaje_cookies = '';
@@ -69,11 +71,8 @@ if ($debug_activo) {
 
 try {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT COUNT(*) AS total_users FROM users');
-    $total_users = $stmt->fetchColumn();
-
-    $stmt = $pdo->query('SELECT COUNT(*) AS total_uploads FROM uploads');
-    $total_uploads = $stmt->fetchColumn();
+    $total_users = fetch_total_users($pdo);
+    $total_uploads = fetch_total_uploads($pdo);
 } catch (PDOException $e) {
     $total_users = 0;
     $total_uploads = 0;
@@ -90,36 +89,24 @@ try {
 </head>
 
 <body>
-    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-home-menu-inner">
-            <a class="menu-icon-btn" href="landing.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
+    <?php
+    $landingNavItems = [];
+    if ($cookie_activa || isset($_SESSION['usuario_id'])) {
+        $landingNavItems[] = ['href' => 'home.php', 'label' => 'Ir al inicio'];
+    } else {
+        $landingNavItems[] = ['href' => 'login.php', 'label' => 'Iniciar sesión'];
+        $landingNavItems[] = ['href' => 'register.php', 'label' => 'Registrarse'];
+    }
 
-            <?php if (isset($_SESSION['usuario_id'])): ?>
-                <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
-                    <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                    <span>Cerrar sesión</span>
-                </a>
-            <?php endif; ?>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <nav class="sticky-links">
-                <ul>
-                    <?php if ($cookie_activa || isset($_SESSION['usuario_id'])): ?>
-                        <li><a href="home.php">Ir al inicio</a></li>
-                    <?php else: ?>
-                        <li><a href="login.php">Iniciar sesión</a></li>
-                        <li><a href="register.php">Registrarse</a></li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu',
+        'inner_class' => 'sticky-home-menu-inner',
+        'home_href' => 'landing.php',
+        'show_logout' => isset($_SESSION['usuario_id']),
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => $landingNavItems,
+    ]);
+    ?>
 
     <div class="index-container">
         <h1>Recepted</h1>

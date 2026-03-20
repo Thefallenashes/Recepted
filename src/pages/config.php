@@ -2,6 +2,8 @@
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/query_helpers.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 // For now basic config page with session check
 if (!isset($_SESSION['usuario_id'])) {
@@ -22,8 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $currency = trim($_POST['currency'] ?? 'EUR');
     try {
         $pdo = getPDO();
-        $stmt = $pdo->prepare('UPDATE finanzas SET currency = :currency WHERE user_id = :user_id');
-        $stmt->execute(['currency' => $currency, 'user_id' => $_SESSION['usuario_id']]);
+        update_user_currency($pdo, (int)$_SESSION['usuario_id'], $currency);
         $tipo = 'exito';
         $mensaje = 'Configuración guardada.';
     } catch (PDOException $e) {
@@ -36,10 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Obtener configuración actual
 try {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('SELECT currency FROM finanzas WHERE user_id = :user_id');
-    $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
-    $conf = $stmt->fetch();
-    $current_currency = $conf['currency'] ?? 'EUR';
+    $current_currency = fetch_user_currency($pdo, (int)$_SESSION['usuario_id'], 'EUR');
 } catch (PDOException $e) {
     $current_currency = 'EUR';
 }
@@ -54,37 +52,21 @@ try {
     <link rel="stylesheet" href="../css/config.css">
 </head>
 <body>
-    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-home-menu-inner">
-            <a class="menu-icon-btn" href="home.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
-
-            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
-                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                <span>Cerrar sesión</span>
-            </a>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <nav class="sticky-links">
-                <ul>
-                    <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="tickets.php">Tickets</a></li>
-                    <li><a href="config.php">Configuración</a></li>
-                    <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel de administracion</a></li>
-                    <?php endif; ?>
-                    <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola</a></li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu',
+        'inner_class' => 'sticky-home-menu-inner',
+        'home_href' => 'home.php',
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => [
+            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
+            ['href' => 'tickets.php', 'label' => 'Tickets'],
+            ['href' => 'config.php', 'label' => 'Configuración'],
+            ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],
+            ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
+        ],
+    ]);
+    ?>
 
     <div class="config-container">
         <h1>Configuración</h1>

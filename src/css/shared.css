@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400&family=Roboto+Serif:opsz,wght@8..144,300&display=swap');
+
+:root {
+    --color-primary: #0f172a;
+    --color-secondary: #1e293b;
+    --color-border: #e2e8f0;
+    --color-accent: #BAEBFA;
+    --color-accent-hover: #a9dcec;
+    --color-bg-soft: #f8fafc;
+}

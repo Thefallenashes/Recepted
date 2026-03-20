@@ -1,6 +1,9 @@
 ﻿<?php
 session_start();
 require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/query_helpers.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -26,10 +29,8 @@ $tipo = '';
 
 try {
     $pdo = getPDO();
-    // Obtener datos del usuario
-    $stmt = $pdo->prepare('SELECT id, correo, nombre, apellidos, edad, created_at FROM users WHERE id = :id');
-    $stmt->execute(['id' => $_SESSION['usuario_id']]);
-    $usuario = $stmt->fetch();
+    $userId = (int)$_SESSION['usuario_id'];
+    $usuario = fetch_user_profile_by_id($pdo, $userId);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre = trim($_POST['nombre'] ?? '');
@@ -43,8 +44,7 @@ try {
         if ($edad < 13 || $edad > 120) $errors[] = 'Edad inválida.';
 
         if (empty($errors)) {
-            $stmt = $pdo->prepare('UPDATE users SET nombre = :nombre, apellidos = :apellidos, edad = :edad WHERE id = :id');
-            $stmt->execute(['nombre' => $nombre, 'apellidos' => $apellidos, 'edad' => $edad, 'id' => $_SESSION['usuario_id']]);
+            update_user_profile($pdo, $userId, $nombre, $apellidos, $edad);
             $tipo = 'exito';
             $mensaje = 'Perfil actualizado.';
 
@@ -54,9 +54,7 @@ try {
             $_SESSION['usuario_edad'] = $edad;
 
             // Refrescar datos
-            $stmt = $pdo->prepare('SELECT id, correo, nombre, apellidos, edad, created_at FROM users WHERE id = :id');
-            $stmt->execute(['id' => $_SESSION['usuario_id']]);
-            $usuario = $stmt->fetch();
+            $usuario = fetch_user_profile_by_id($pdo, $userId);
         } else {
             $tipo = 'error';
             $mensaje = implode('<br>', $errors);
@@ -78,33 +76,21 @@ try {
     <link rel="stylesheet" href="../css/perfil.css">
 </head>
 <body>
-    <header class="sticky-page-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-page-menu-inner">
-            <a class="menu-icon-btn" href="home.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <nav class="sticky-links">
-                <ul>
-                    <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="tickets.php">Tickets</a></li>
-                    <li><a href="scripts/upload.php">Subir archivo</a></li>
-                    <li><a href="mis_uploads.php">Mis archivos</a></li>
-                    <li><a href="config.php">Configuración</a></li>
-                </ul>
-            </nav>
-
-            <a class="menu-icon-btn logout-btn" href="logout.php" aria-label="Cerrar sesión">
-                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                <span>Cerrar sesión</span>
-            </a>
-        </div>
-    </header>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-page-menu',
+        'inner_class' => 'sticky-page-menu-inner',
+        'home_href' => 'home.php',
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => [
+            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
+            ['href' => 'tickets.php', 'label' => 'Tickets'],
+            ['href' => 'scripts/upload.php', 'label' => 'Subir archivo'],
+            ['href' => 'mis_uploads.php', 'label' => 'Mis archivos'],
+            ['href' => 'config.php', 'label' => 'Configuración'],
+        ],
+    ]);
+    ?>
 
     <div class="perfil-container">
         <h1>Perfil de Usuario</h1>

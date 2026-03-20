@@ -4,14 +4,9 @@
  * procesamiento en cliente (SheetJS). Solo permite archivos
  * con extensiones Excel admitidas.
  */
-session_start();
-require_once __DIR__ . '/../../utils/db.php';
-require_once __DIR__ . '/../../utils/auth.php';
+require_once __DIR__ . '/script_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(403);
-    exit('Acceso denegado.');
-}
+$userId = require_script_user('http403');
 
 $allowedExts = ['csv', 'xlsb', 'xltx', 'xls', 'xlsm', 'xlsx'];
 
@@ -23,20 +18,10 @@ if ($id <= 0) {
 
 try {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('SELECT * FROM uploads WHERE id = :id');
-    $stmt->execute(['id' => $id]);
-    $row = $stmt->fetch();
-
+    $row = get_accessible_upload($pdo, $id, $userId);
     if (!$row) {
         http_response_code(404);
-        exit('Archivo no encontrado.');
-    }
-
-    // Verificar propietario o rol admin/superadmin
-    $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
-    if ($row['user_id'] != $_SESSION['usuario_id'] && !$isAdmin) {
-        http_response_code(403);
-        exit('Sin permiso para acceder a este archivo.');
+        exit('Archivo no encontrado o sin permisos.');
     }
 
     // Verificar extensión permitida
@@ -46,16 +31,8 @@ try {
         exit('Tipo de archivo no permitido para análisis.');
     }
 
-    $file = dirname(__DIR__, 2) . '/' . $row['filepath'];
-    // Asegurar que la ruta resuelta esté dentro del directorio de uploads
-    $uploadsBase = realpath(dirname(__DIR__, 2) . '/uploads');
-    $realFile    = realpath($file);
-    if ($realFile === false || strpos($realFile, $uploadsBase) !== 0) {
-        http_response_code(403);
-        exit('Ruta de archivo inválida.');
-    }
-
-    if (!is_file($realFile)) {
+    $realFile = resolve_upload_realpath((string)$row['filepath']);
+    if ($realFile === null) {
         http_response_code(404);
         exit('Archivo físico no encontrado.');
     }

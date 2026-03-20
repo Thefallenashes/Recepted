@@ -1,8 +1,5 @@
 ﻿<?php
-session_start();
-
-require_once __DIR__ . '/../../utils/db.php';
-require_once __DIR__ . '/../../utils/auth.php';
+require_once __DIR__ . '/script_bootstrap.php';
 
 $user_id = $_SESSION['usuario_id'] ?? null;
 

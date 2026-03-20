@@ -3,6 +3,8 @@ session_start();
 
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/query_helpers.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
     try {
@@ -30,20 +32,10 @@ if (!isset($_SESSION['usuario_id'])) {
 try {
     $pdo = getPDO();
 
-    // Obtener datos del usuario
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
-    $stmt->execute(['id' => $_SESSION['usuario_id']]);
-    $usuario = $stmt->fetch();
-
-    // Obtener datos de finanzas
-    $stmt = $pdo->prepare('SELECT * FROM finanzas WHERE user_id = :user_id');
-    $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
-    $finanzas = $stmt->fetch();
-
-    // Obtener las 5 transacciones más recientes
-    $stmt = $pdo->prepare('SELECT * FROM transactions WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 5');
-    $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
-    $recent_transactions = $stmt->fetchAll();
+    $userId = (int)$_SESSION['usuario_id'];
+    $usuario = fetch_user_by_id($pdo, $userId);
+    $finanzas = fetch_user_finanzas($pdo, $userId);
+    $recent_transactions = fetch_recent_user_transactions($pdo, $userId, 5);
 } catch (PDOException $e) {
     echo "Error al conectar: " . htmlspecialchars($e->getMessage());
     exit();
@@ -61,37 +53,22 @@ try {
 </head>
 
 <body>
-    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-home-menu-inner">
-            <a class="menu-icon-btn" href="home.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <nav class="navbar sticky-links">
-                <ul>
-                    <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="tickets.php">Tickets</a></li>
-                    <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">Panel de administracion</a></li>
-                    <?php endif; ?>
-                    <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
-                        <li><a href="superadmin_console.php">Consola</a></li>
-                    <?php endif; ?>
-                    <li><a href="config.php">Configuración</a></li>
-                </ul>
-            </nav>
-
-            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
-                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                <span>Cerrar sesión</span>
-            </a>
-        </div>
-    </header>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu',
+        'inner_class' => 'sticky-home-menu-inner',
+        'nav_class' => 'navbar sticky-links',
+        'home_href' => 'home.php',
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => [
+            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
+            ['href' => 'tickets.php', 'label' => 'Tickets'],
+            ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],
+            ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
+            ['href' => 'config.php', 'label' => 'Configuración'],
+        ],
+    ]);
+    ?>
 
     <div class="home-container">
         <header class="header">

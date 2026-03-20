@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../utils/db.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 require_min_role('superadmin', 'home.php');
 
@@ -76,33 +77,21 @@ try {
 </head>
 
 <body>
-    <header class="sticky-home-menu is-collapsed" data-sticky-menu data-icon-collapsed="../images/MostrarMenuDesplegable.PNG" data-icon-expanded="../images/OcultarMenuDesplegable.PNG">
-        <div class="sticky-home-menu-inner">
-            <a class="menu-icon-btn" href="home.php" aria-label="Inicio">
-                <img src="../images/Home.PNG" alt="Inicio" class="icon-home">
-                <span>Inicio</span>
-            </a>
-
-            <a class="menu-icon-btn logout-btn" href="scripts/logout.php" aria-label="Cerrar sesión">
-                <img src="../images/BotonLogOut.PNG" alt="Cerrar sesión" class="logout-icon">
-                <span>Cerrar sesión</span>
-            </a>
-
-            <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="Mostrar menu desplegable" aria-expanded="false">
-                <img src="../images/MostrarMenuDesplegable.PNG" alt="Mostrar menu desplegable" class="menu-toggle-icon" data-menu-toggle-icon>
-            </button>
-
-            <nav class="sticky-links">
-                <ul>
-                    <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="tickets.php">Tickets</a></li>
-                    <li><a href="config.php">Configuración</a></li>
-                    <li><a href="admin_panel.php">Panel de administracion</a></li>
-                    <li><a href="superadmin_console.php">Consola</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu',
+        'inner_class' => 'sticky-home-menu-inner',
+        'home_href' => 'home.php',
+        'logout_href' => 'scripts/logout.php',
+        'nav_items' => [
+            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
+            ['href' => 'tickets.php', 'label' => 'Tickets'],
+            ['href' => 'config.php', 'label' => 'Configuración'],
+            ['href' => 'admin_panel.php', 'label' => 'Panel de administracion'],
+            ['href' => 'superadmin_console.php', 'label' => 'Consola'],
+        ],
+    ]);
+    ?>
 
     <div class="index-container">
         <h1>Consola de Super-Administrador</h1>

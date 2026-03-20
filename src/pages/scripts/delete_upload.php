@@ -1,12 +1,7 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../../utils/db.php';
-require_once __DIR__ . '/../../utils/auth.php';
+require_once __DIR__ . '/script_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: ../login.php');
-    exit();
-}
+$userId = require_script_user('redirect', '../login.php');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../mis_uploads.php');
@@ -21,19 +16,15 @@ if ($id <= 0) {
 
 try {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('SELECT * FROM uploads WHERE id = :id');
-    $stmt->execute(['id' => $id]);
-    $row = $stmt->fetch();
-
-    $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
-    if (!$row || ($row['user_id'] != $_SESSION['usuario_id'] && !$isAdmin)) {
+    $row = get_accessible_upload($pdo, $id, $userId);
+    if (!$row) {
         header('Location: ../mis_uploads.php');
         exit();
     }
 
     // Borrar archivo físico
-    $file = dirname(__DIR__, 2) . '/' . $row['filepath'];
-    if (is_file($file)) {
+    $file = resolve_upload_realpath((string)$row['filepath']);
+    if ($file !== null) {
         @unlink($file);
     }
 

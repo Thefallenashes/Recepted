@@ -118,8 +118,8 @@ render_sticky_menu([
        Estado global
     ============================================================ */
     let currentType    = 'bar';
-    let chartInstance  = null;
-    let analysedData   = null; // { labels, gastos, beneficios, gastosNames, beneficiosNames }
+    let chartInstances = [];
+    let analysedData   = null; // array of { sheetName, labels, gastos, beneficios, gastosNames, beneficiosNames }
 
     /* ============================================================
        Elementos DOM
@@ -162,19 +162,22 @@ render_sticky_menu([
             const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
             if (!wb.SheetNames.length) throw new Error('El archivo no contiene hojas.');
 
-            const ws   = wb.Sheets[wb.SheetNames[0]];
-            const raw  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+            const sheetsData = [];
+            for (const sheetName of wb.SheetNames) {
+                const ws  = wb.Sheets[sheetName];
+                const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+                const rows = raw.filter(r => r.some(c => c !== null && c !== ''));
+                if (!rows.length) continue;
+                const data = analyseData(rows);
+                if (!data.labels.length) continue;
+                sheetsData.push({ sheetName, ...data });
+            }
 
-            // Filtrar filas completamente vacías
-            const rows = raw.filter(r => r.some(c => c !== null && c !== ''));
-            if (!rows.length) throw new Error('La hoja parece estar vacía.');
-
-            analysedData = analyseData(rows);
-
-            if (!analysedData.labels.length) {
+            if (!sheetsData.length) {
                 throw new Error('No se encontraron datos numéricos válidos en el archivo.');
             }
 
+            analysedData = sheetsData;
             chartTypes.style.display = 'flex';
             renderView(analysedData, currentType);
 
@@ -343,214 +346,233 @@ render_sticky_menu([
     /* ============================================================
        Renderizado
     ============================================================ */
-    function renderView(data, type) {
-        if (chartInstance) {
-            chartInstance.destroy();
-            chartInstance = null;
-        }
+    function renderView(sheetsData, type) {
+        chartInstances.forEach(c => c.destroy());
+        chartInstances = [];
         chartArea.innerHTML = '';
 
-        const totalG = data.gastos.reduce((a, b) => a + b, 0);
-        const totalB = data.beneficios.reduce((a, b) => a + b, 0);
-        const net    = totalB - totalG;
+        const isMulti = sheetsData.length > 1;
+        const multiWrap = document.createElement('div');
+        multiWrap.className = isMulti ? 'ae-multi-sheet' : 'ae-single-sheet';
+        chartArea.appendChild(multiWrap);
 
-        /* -- Barra de totales -- */
-        const netClass = net > 0 ? 'pos' : net < 0 ? 'neg' : 'neu';
-        const netLabel = net >= 0 ? 'Beneficios' : 'Pérdidas';
-        const totalsEl = doc(`
-            <div class="ae-totals">
-                <div class="ae-total-item">
-                    <span class="ae-total-label">Gastos totales</span>
-                    <span class="ae-total-value neg">-${fmt(totalG)} €</span>
-                </div>
-                <div class="ae-total-item">
-                    <span class="ae-total-label">Beneficios totales</span>
-                    <span class="ae-total-value pos">+${fmt(totalB)} €</span>
-                </div>
-                <div class="ae-total-item">
-                    <span class="ae-total-label">Resultado global</span>
-                    <span class="ae-total-value ${netClass}">${netLabel}: ${net >= 0 ? '+' : ''}${fmt(net)} €</span>
-                </div>
-            </div>`);
+        sheetsData.forEach(data => {
+            const section = document.createElement('div');
+            section.className = 'ae-sheet-section';
 
-        /* -- Información de columnas detectadas -- */
-        const colInfoEl = doc(`
-            <div class="ae-col-info">
-                Columnas de <strong>gastos</strong>: ${esc(data.gastosNames.join(', ') || 'ninguna detectada')}
-                &nbsp;·&nbsp;
-                Columnas de <strong>beneficios</strong>: ${esc(data.beneficiosNames.join(', ') || 'ninguna detectada')}
-            </div>`);
+            if (isMulti) {
+                const title = document.createElement('h3');
+                title.className = 'ae-sheet-title';
+                title.textContent = data.sheetName;
+                section.appendChild(title);
+            }
 
-        chartArea.appendChild(totalsEl);
-        chartArea.appendChild(colInfoEl);
+            const totalG = data.gastos.reduce((a, b) => a + b, 0);
+            const totalB = data.beneficios.reduce((a, b) => a + b, 0);
+            const net    = totalB - totalG;
 
-        /* ── Vista de texto ── */
-        if (type === 'text') {
-            const textDiv = document.createElement('div');
-            textDiv.className = 'ae-text-view';
+            /* -- Barra de totales -- */
+            const netClass = net > 0 ? 'pos' : net < 0 ? 'neg' : 'neu';
+            const netLabel = net >= 0 ? 'Beneficios' : 'Pérdidas';
+            const totalsEl = doc(`
+                <div class="ae-totals">
+                    <div class="ae-total-item">
+                        <span class="ae-total-label">Gastos totales</span>
+                        <span class="ae-total-value neg">-${fmt(totalG)} €</span>
+                    </div>
+                    <div class="ae-total-item">
+                        <span class="ae-total-label">Beneficios totales</span>
+                        <span class="ae-total-value pos">+${fmt(totalB)} €</span>
+                    </div>
+                    <div class="ae-total-item">
+                        <span class="ae-total-label">Resultado global</span>
+                        <span class="ae-total-value ${netClass}">${netLabel}: ${net >= 0 ? '+' : ''}${fmt(net)} €</span>
+                    </div>
+                </div>`);
 
-            data.labels.forEach((label, i) => {
-                const g    = data.gastos[i];
-                const b    = data.beneficios[i];
-                const n    = b - g;
-                const isOk = n >= 0;
-                const block = doc(`
-                    <div class="ae-month-block">
-                        <h3>${esc(label)}</h3>
-                        <div class="ae-stat-row">
-                            <span class="ae-stat-label">Gastos</span>
-                            <span class="ae-stat-val neg">-${fmt(g)} €</span>
-                        </div>
-                        <div class="ae-stat-row">
-                            <span class="ae-stat-label">Beneficios totales</span>
-                            <span class="ae-stat-val pos">+${fmt(b)} €</span>
-                        </div>
-                        <div class="ae-stat-row">
-                            <span class="ae-stat-label">Resultado</span>
-                            <span class="ae-stat-val ${isOk ? 'pos' : 'neg'}">
-                                ${isOk ? 'Beneficios' : 'Pérdidas'}: ${isOk ? '+' : ''}${fmt(n)} €
-                            </span>
-                        </div>
-                    </div>`);
-                textDiv.appendChild(block);
-            });
+            /* -- Información de columnas detectadas -- */
+            const colInfoEl = doc(`
+                <div class="ae-col-info">
+                    Columnas de <strong>gastos</strong>: ${esc(data.gastosNames.join(', ') || 'ninguna detectada')}
+                    &nbsp;·&nbsp;
+                    Columnas de <strong>beneficios</strong>: ${esc(data.beneficiosNames.join(', ') || 'ninguna detectada')}
+                </div>`);
 
-            chartArea.appendChild(textDiv);
-            return;
-        }
+            section.appendChild(totalsEl);
+            section.appendChild(colInfoEl);
 
-        /* ── Vista de gráfico ── */
-        const wrap   = document.createElement('div');
-        wrap.className = 'ae-canvas-wrap';
-        const canvas = document.createElement('canvas');
-        canvas.id    = 'aeMainChart';
-        wrap.appendChild(canvas);
-        chartArea.appendChild(wrap);
+            /* ── Vista de texto ── */
+            if (type === 'text') {
+                const textDiv = document.createElement('div');
+                textDiv.className = 'ae-text-view';
 
-        const ctx = canvas.getContext('2d');
+                data.labels.forEach((label, i) => {
+                    const g    = data.gastos[i];
+                    const b    = data.beneficios[i];
+                    const n    = b - g;
+                    const isOk = n >= 0;
+                    const block = doc(`
+                        <div class="ae-month-block">
+                            <h3>${esc(label)}</h3>
+                            <div class="ae-stat-row">
+                                <span class="ae-stat-label">Gastos</span>
+                                <span class="ae-stat-val neg">-${fmt(g)} €</span>
+                            </div>
+                            <div class="ae-stat-row">
+                                <span class="ae-stat-label">Beneficios totales</span>
+                                <span class="ae-stat-val pos">+${fmt(b)} €</span>
+                            </div>
+                            <div class="ae-stat-row">
+                                <span class="ae-stat-label">Resultado</span>
+                                <span class="ae-stat-val ${isOk ? 'pos' : 'neg'}">
+                                    ${isOk ? 'Beneficios' : 'Pérdidas'}: ${isOk ? '+' : ''}${fmt(n)} €
+                                </span>
+                            </div>
+                        </div>`);
+                    textDiv.appendChild(block);
+                });
 
-        const colG = 'rgba(220,38,38,0.75)';
-        const colB = 'rgba(22,163,74,0.75)';
-        const colGb = 'rgba(220,38,38,1)';
-        const colBb = 'rgba(22,163,74,1)';
+                section.appendChild(textDiv);
+            } else {
+                /* ── Vista de gráfico ── */
+                const wrap   = document.createElement('div');
+                wrap.className = 'ae-canvas-wrap';
+                const canvas = document.createElement('canvas');
+                canvas.id    = 'aeChart_' + Math.random().toString(36).slice(2);
+                wrap.appendChild(canvas);
+                section.appendChild(wrap);
 
-        if (type === 'bar') {
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: 'Gastos',
-                            data: data.gastos,
-                            backgroundColor: colG,
-                            borderColor: colGb,
-                            borderWidth: 1
+                const ctx = canvas.getContext('2d');
+
+                const colG  = 'rgba(220,38,38,0.75)';
+                const colB  = 'rgba(22,163,74,0.75)';
+                const colGb = 'rgba(220,38,38,1)';
+                const colBb = 'rgba(22,163,74,1)';
+
+                let ci;
+                if (type === 'bar') {
+                    ci = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [
+                                {
+                                    label: 'Gastos',
+                                    data: data.gastos,
+                                    backgroundColor: colG,
+                                    borderColor: colGb,
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Beneficios',
+                                    data: data.beneficios,
+                                    backgroundColor: colB,
+                                    borderColor: colBb,
+                                    borderWidth: 1
+                                }
+                            ]
                         },
-                        {
-                            label: 'Beneficios',
-                            data: data.beneficios,
-                            backgroundColor: colB,
-                            borderColor: colBb,
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €'
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: v => fmt(v) + ' €'
-                            }
-                        }
-                    }
-                }
-            });
-
-        } else if (type === 'pie') {
-            const total = totalG + totalB || 1;
-            chartInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Gastos', 'Beneficios'],
-                    datasets: [{
-                        data: [round2(totalG), round2(totalB)],
-                        backgroundColor: [colG, colB],
-                        borderColor: [colGb, colBb],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => {
-                                    const pct = ((ctx.raw / total) * 100).toFixed(1);
-                                    return ' ' + fmt(ctx.raw) + ' € (' + pct + '%)';
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: v => fmt(v) + ' €'
+                                    }
                                 }
                             }
                         }
-                    }
-                }
-            });
+                    });
 
-        } else if (type === 'line') {
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: 'Gastos',
-                            data: data.gastos,
-                            borderColor: colGb,
-                            backgroundColor: 'rgba(220,38,38,0.08)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 4
+                } else if (type === 'pie') {
+                    const total = totalG + totalB || 1;
+                    ci = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Gastos', 'Beneficios'],
+                            datasets: [{
+                                data: [round2(totalG), round2(totalB)],
+                                backgroundColor: [colG, colB],
+                                borderColor: [colGb, colBb],
+                                borderWidth: 1
+                            }]
                         },
-                        {
-                            label: 'Beneficios',
-                            data: data.beneficios,
-                            borderColor: colBb,
-                            backgroundColor: 'rgba(22,163,74,0.08)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €'
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => {
+                                            const pct = ((ctx.raw / total) * 100).toFixed(1);
+                                            return ' ' + fmt(ctx.raw) + ' € (' + pct + '%)';
+                                        }
+                                    }
+                                }
                             }
                         }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => fmt(v) + ' €' }
+                    });
+
+                } else if (type === 'line') {
+                    ci = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [
+                                {
+                                    label: 'Gastos',
+                                    data: data.gastos,
+                                    borderColor: colGb,
+                                    backgroundColor: 'rgba(220,38,38,0.08)',
+                                    tension: 0.35,
+                                    fill: true,
+                                    pointRadius: 4
+                                },
+                                {
+                                    label: 'Beneficios',
+                                    data: data.beneficios,
+                                    borderColor: colBb,
+                                    backgroundColor: 'rgba(22,163,74,0.08)',
+                                    tension: 0.35,
+                                    fill: true,
+                                    pointRadius: 4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { callback: v => fmt(v) + ' €' }
+                                }
+                            }
                         }
-                    }
+                    });
                 }
-            });
-        }
+
+                if (ci) chartInstances.push(ci);
+            }
+
+            multiWrap.appendChild(section);
+        });
     }
 
     /* ============================================================
@@ -569,7 +591,16 @@ render_sticky_menu([
         if (typeof v === 'number') return isFinite(v);
         if (typeof v === 'string') {
             const cleaned = v.replace(/[€$£%\s]/g, '').replace(',', '.');
-            return cleaned !== '' && !isNaN(parseFloat(cleaned));
+            if (cleaned !== '' && isFinite(parseFloat(cleaned))) return true;
+            // Multi-value cells: "59,45€ + 450€ + 92€"
+            const parts = v.split(/\s*\+\s*/);
+            if (parts.length > 1) {
+                return parts.every(p => {
+                    const c = p.replace(/[€$£%\s]/g, '').replace(',', '.');
+                    return c !== '' && isFinite(parseFloat(c));
+                });
+            }
+            return false;
         }
         return false;
     }
@@ -578,6 +609,18 @@ render_sticky_menu([
         if (v === null || v === undefined || v === '') return NaN;
         if (typeof v === 'number') return v;
         if (typeof v === 'string') {
+            // Multi-value cells: "59,45€ + 450€ + 92€"
+            const parts = v.split(/\s*\+\s*/);
+            if (parts.length > 1) {
+                let sum = 0;
+                for (const part of parts) {
+                    const c = part.replace(/[€$£%\s]/g, '').replace(',', '.');
+                    const n = parseFloat(c);
+                    if (!isFinite(n)) return NaN;
+                    sum += n;
+                }
+                return sum;
+            }
             const cleaned = v.replace(/[€$£%\s]/g, '').replace(',', '.');
             return parseFloat(cleaned);
         }

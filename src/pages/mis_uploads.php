@@ -87,7 +87,7 @@ try {
             </table>
         <?php endif; ?>
 
-        <p><a href="scripts/upload.php">Subir nuevo archivo</a> | <a href="analizar_excel.php">Analizar Excel</a> | <a href="scripts/logout.php">Cerrar Sesión</a></p>
+        <p><a href="scripts/upload.php">Subir nuevo archivo</a> | <a href="analizar_excel.php">Analizar Excel</a></p>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>

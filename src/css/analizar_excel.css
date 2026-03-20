@@ -257,3 +257,30 @@
         text-align: left;
     }
 }
+
+/* ── Multi-sheet layout ── */
+.ae-multi-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    align-items: flex-start;
+}
+
+.ae-single-sheet {
+    display: block;
+}
+
+.ae-sheet-section {
+    flex: 1 1 420px;
+    min-width: 300px;
+}
+
+.ae-sheet-title {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    color: #0b1739;
+    padding: 8px 14px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    border-left: 3px solid #0f766e;
+}

@@ -1,4 +1,4 @@
-﻿<?php
+﻿-<?php
 require_once __DIR__ . '/script_bootstrap.php';
 
 $userId = require_script_user('http403');

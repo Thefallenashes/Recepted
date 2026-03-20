@@ -27,10 +27,18 @@ try {
             $mensaje = 'Usuario objetivo no válido.';
         } else {
             $targetCurrentRole = normalize_user_role($target['role'] ?? 'user');
-            $canEdit = role_level($myRole) > role_level($targetCurrentRole);
 
-            if ($myRole === 'admin' && $newRole === 'superadmin') {
+            if ($targetUserId === (int)$_SESSION['usuario_id']) {
+                // No se puede cambiar el propio rol
                 $canEdit = false;
+            } elseif ($myRole === 'superadmin') {
+                // Un superadmin puede editar a cualquier otro usuario, incluyendo otros superadmins
+                $canEdit = true;
+            } else {
+                $canEdit = role_level($myRole) > role_level($targetCurrentRole);
+                if ($myRole === 'admin' && $newRole === 'superadmin') {
+                    $canEdit = false;
+                }
             }
 
             if (!$canEdit) {
@@ -128,10 +136,10 @@ try {
                                 <form method="POST" action="" style="display:inline">
                                     <input type="hidden" name="target_user_id" value="<?php echo (int)$user['id']; ?>">
                                     <select name="new_role">
-                                        <option value="user">user</option>
-                                        <option value="admin">admin</option>
+                                        <option value="user" <?php echo ($user['role'] ?? '') === 'user' ? 'selected' : ''; ?>>user</option>
+                                        <option value="admin" <?php echo ($user['role'] ?? '') === 'admin' ? 'selected' : ''; ?>>admin</option>
                                         <?php if (has_min_role('superadmin')): ?>
-                                            <option value="superadmin">superadmin</option>
+                                            <option value="superadmin" <?php echo ($user['role'] ?? '') === 'superadmin' ? 'selected' : ''; ?>>superadmin</option>
                                         <?php endif; ?>
                                     </select>
                                     <button type="submit" name="actualizar_rol" value="1">Guardar</button>

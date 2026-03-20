@@ -329,3 +329,55 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+.uploads-cta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+}
+
+.uploads-cta p {
+    margin: 0;
+    color: #134e4a;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.btn-uploads {
+    display: inline-block;
+    padding: 9px 20px;
+    background: #0f766e;
+    color: #ffffff;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.btn-uploads:hover {
+    background: #0b8f97;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.uploads-link {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.uploads-link a {
+    color: #0f766e;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.uploads-link a:hover {
+    text-decoration: underline;
+}
+

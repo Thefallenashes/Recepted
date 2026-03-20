@@ -36,6 +36,7 @@ try {
     $usuario = fetch_user_by_id($pdo, $userId);
     $finanzas = fetch_user_finanzas($pdo, $userId);
     $recent_transactions = fetch_recent_user_transactions($pdo, $userId, 5);
+    $uploads = fetch_uploads_visible_for_user($pdo, $userId);
 } catch (PDOException $e) {
     echo "Error al conectar: " . htmlspecialchars($e->getMessage());
     exit();
@@ -89,7 +90,7 @@ try {
                 </div>
 
                 <div class="finance-summary">
-                    <h2>Resumen Financiero</h2>
+        <!-- #region           <h2>Resumen Financiero</h2>
                     <?php if ($finanzas): ?>
                         <div class="finance-box">
                             <div class="finance-item">
@@ -108,8 +109,8 @@ try {
                     <?php else: ?>
                         <p>No hay información financiera disponible.</p>
                     <?php endif; ?>
-
-                    <h3>Últimas transacciones</h3>
+-->
+                    <h2>Últimas transacciones</h2>
                     <?php if (!empty($recent_transactions)): ?>
                         <table class="recent-transactions">
                             <thead>
@@ -135,6 +136,16 @@ try {
                         </table>
                     <?php else: ?>
                         <p>No hay transacciones registradas.</p>
+                    <?php endif; ?>
+
+                    <h3>Archivos</h3>
+                    <?php if (empty($uploads)): ?>
+                        <div class="uploads-cta">
+                            <p>¡Comienza a analizar tus finanzas! Para comenzar sube y analiza tus archivos Excel</p>
+                            <a href="mis_uploads.php" class="btn-uploads">Ir a mis archivos →</a>
+                        </div>
+                    <?php else: ?>
+                        <p class="uploads-link">Tienes <?php echo count($uploads); ?> archivo<?php echo count($uploads) !== 1 ? 's' : ''; ?> subido<?php echo count($uploads) !== 1 ? 's' : ''; ?>. <a href="mis_uploads.php">Ver mis archivos</a></p>
                     <?php endif; ?>
                 </div>
             </section>

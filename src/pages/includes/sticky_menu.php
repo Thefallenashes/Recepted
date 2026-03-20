@@ -2,7 +2,7 @@
 
 if (!function_exists('render_sticky_menu')) {
     /**
-     * Renderiza el menú sticky reutilizable para páginas públicas/autenticadas.
+     * Renderiza el menú reutilizable para las páginas.
      *
      * @param array<string, mixed> $options
      */

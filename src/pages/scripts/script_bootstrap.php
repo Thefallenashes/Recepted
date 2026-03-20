@@ -26,7 +26,7 @@ function require_script_user(string $mode = 'redirect', string $redirectTo = '..
 }
 
 /**
- * Obtiene un upload por id solo si el usuario actual tiene acceso.
+ * Obtiene un upload por id si el usuario actual tiene acceso.
  *
  * @return array<string, mixed>|null
  */

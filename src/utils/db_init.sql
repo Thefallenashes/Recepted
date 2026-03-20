@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `savings_goals` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,
   `name` VARCHAR(120) NOT NULL,
-  `target_amount` DECIMAL(14,2) NOT NULL,
+  `target_amount` DECIMAL(14,2) NOT NULL,--
   `current_amount` DECIMAL(14,2) NOT NULL DEFAULT 0.00,
   `target_date` DATE NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

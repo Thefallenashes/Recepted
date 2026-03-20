@@ -26,7 +26,6 @@ try {
         exit();
     }
 
-    // For safety: set headers and read file
     header('Content-Description: File Transfer');
     header('Content-Type: ' . ($row['mime'] ?: 'application/octet-stream'));
     header('Content-Disposition: attachment; filename="' . basename($row['filename']) . '"');

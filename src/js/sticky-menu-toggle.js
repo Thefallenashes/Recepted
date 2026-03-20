@@ -43,28 +43,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function slideIn(el) {
             return new Promise(function (resolve) {
-                // Clear any leftover timer
                 if (el._slideTimer) {
                     clearTimeout(el._slideTimer);
                 }
 
-                // Make element visible before measuring
+                //Hace el elemento visible
                 el.hidden = false;
 
-                // Set initial collapsed state without transition
+                // Fuerza a que comienze colapsado
                 el.style.transition = 'none';
                 el.style.overflow = 'hidden';
                 el.style.maxHeight = '0px';
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(-10px)';
-
-                // Force the browser to register the initial state before starting transition
                 void el.offsetHeight;
-
-                // Measure full content height (scrollHeight ignores max-height constraint)
+                // Comprobar tamaño del contenido
                 var targetH = el.scrollHeight;
 
-                // Start CSS transition to visible state
+                // Inicia la animacion
                 el.style.transition = TRANS;
                 el.style.maxHeight = targetH + 'px';
                 el.style.opacity = '1';
@@ -84,8 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.removeEventListener('transitionend', handler);
                     finish();
                 });
-
-                // Fallback in case transitionend doesn't fire
                 el._slideTimer = setTimeout(finish, DURATION + 60);
             });
         }
@@ -101,18 +95,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearTimeout(el._slideTimer);
                 }
 
-                // Lock the current height so transition has a defined start value
+                //Bloquea la altura actual del menu
                 var currentH = el.scrollHeight;
                 el.style.transition = 'none';
                 el.style.overflow = 'hidden';
                 el.style.maxHeight = currentH + 'px';
                 el.style.opacity = '1';
                 el.style.transform = 'translateY(0)';
-
-                // Force the browser to register the locked height before transitioning
                 void el.offsetHeight;
-
-                // Animate to collapsed state
+                // Animacion para el cierre
                 el.style.transition = TRANS;
                 el.style.maxHeight = '0px';
                 el.style.opacity = '0';
@@ -133,8 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.removeEventListener('transitionend', handler);
                     finish();
                 });
-
-                // Fallback in case transitionend doesn't fire
                 el._slideTimer = setTimeout(finish, DURATION + 60);
             });
         }
@@ -147,14 +136,14 @@ document.addEventListener('DOMContentLoaded', function () {
             isAnimating = true;
 
             if (menu.classList.contains('is-collapsed')) {
-                // Opening
+                // Abrur
                 menu.classList.remove('is-collapsed');
                 syncIcons(false);
                 Promise.all(animatedItems.map(slideIn)).then(function () {
                     isAnimating = false;
                 });
             } else {
-                // Closing
+                // Cerrar
                 syncIcons(true);
                 Promise.all(animatedItems.map(slideOut)).then(function () {
                     menu.classList.add('is-collapsed');

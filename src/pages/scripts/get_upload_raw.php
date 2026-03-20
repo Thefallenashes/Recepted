@@ -1,8 +1,7 @@
 <?php
 /**
- * Sirve el contenido binario de un archivo subido para su
- * procesamiento en cliente (SheetJS). Solo permite archivos
- * con extensiones Excel admitidas.
+ * Sirve el contenido binario de un archivo subido para su procesamiento en cliente
+ * Solo permite archivos con extensiones de Excel.
  */
 require_once __DIR__ . '/script_bootstrap.php';
 
@@ -24,7 +23,7 @@ try {
         exit('Archivo no encontrado o sin permisos.');
     }
 
-    // Verificar extensión permitida
+    // Verificar extensión 
     $ext = strtolower(pathinfo($row['filename'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowedExts, true)) {
         http_response_code(400);

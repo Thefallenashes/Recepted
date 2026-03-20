@@ -14,6 +14,7 @@ if (!function_exists('render_sticky_menu')) {
             'image_base_path' => '../images',
             'home_href' => 'home.php',
             'home_label' => 'Inicio',
+            'show_home' => true,
             'logout_href' => 'scripts/logout.php',
             'logout_label' => 'Cerrar sesión',
             'show_logout' => true,
@@ -29,6 +30,7 @@ if (!function_exists('render_sticky_menu')) {
         $imageBasePath = rtrim((string)$config['image_base_path'], '/');
         $homeHref = (string)$config['home_href'];
         $homeLabel = (string)$config['home_label'];
+        $showHome = (bool)$config['show_home'];
         $logoutHref = (string)$config['logout_href'];
         $logoutLabel = (string)$config['logout_label'];
         $showLogout = (bool)$config['show_logout'];
@@ -66,10 +68,12 @@ if (!function_exists('render_sticky_menu')) {
         ?>
         <header class="<?php echo htmlspecialchars($containerClass, ENT_QUOTES, 'UTF-8'); ?> is-collapsed" data-sticky-menu data-icon-collapsed="<?php echo htmlspecialchars($collapsedIcon, ENT_QUOTES, 'UTF-8'); ?>" data-icon-expanded="<?php echo htmlspecialchars($expandedIcon, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="<?php echo htmlspecialchars($innerClass, ENT_QUOTES, 'UTF-8'); ?>">
-                <a class="menu-icon-btn" href="<?php echo htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Inicio">
-                    <img src="<?php echo htmlspecialchars($homeIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="Inicio" class="icon-home">
-                    <span><?php echo htmlspecialchars($homeLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                </a>
+                <?php if ($showHome): ?>
+                    <a class="menu-icon-btn" href="<?php echo htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Inicio">
+                        <img src="<?php echo htmlspecialchars($homeIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="Inicio" class="icon-home">
+                        <span><?php echo htmlspecialchars($homeLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                <?php endif; ?>
 
                 <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="false">
                     <img src="<?php echo htmlspecialchars($collapsedIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" class="menu-toggle-icon" data-menu-toggle-icon>

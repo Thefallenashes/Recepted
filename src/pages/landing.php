@@ -101,6 +101,7 @@ try {
     render_sticky_menu([
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
+        'show_home' => false,
         'home_href' => 'landing.php',
         'show_logout' => isset($_SESSION['usuario_id']),
         'logout_href' => 'scripts/logout.php',
@@ -116,8 +117,7 @@ try {
         <?php if (!empty($mensaje_debug)): ?>
             <p><?php echo htmlspecialchars($mensaje_debug); ?></p>
         <?php endif; ?>
-        <p>Usuarios registrados: <?php echo (int)$total_users; ?></p>
-        <p>Archivos subidos: <?php echo (int)$total_uploads; ?></p>
+
         <form method="POST" action="">
             <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
         </form>

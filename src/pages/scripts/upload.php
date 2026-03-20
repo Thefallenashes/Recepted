@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="btn" type="submit">Subir</button>
         </form>
 
-        <p><a href="../scripts/logout.php">Cerrar Sesión</a></p>
+        <p><a href="../mis_uploads.php" class="btn">Ir a mis archivos</a></p>
     </div>
     <script src="../../js/sticky-menu-toggle.js" defer></script>
 </body>

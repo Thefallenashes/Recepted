@@ -95,10 +95,9 @@ try {
             <nav class="sticky-links">
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
-                    <li><a href="admin_panel.php">panel de administrador</a></li>
+                    <li><a href="admin_panel.php">Panel de administracion</a></li>
                     <li><a href="superadmin_console.php">Consola</a></li>
                 </ul>
             </nav>

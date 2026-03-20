@@ -4,18 +4,18 @@ require_once __DIR__ . '/../../utils/db.php';
 require_once __DIR__ . '/../../utils/auth.php';
 
 if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: mis_uploads.php');
+    header('Location: ../mis_uploads.php');
     exit();
 }
 
 $id = intval($_POST['id'] ?? 0);
 if ($id <= 0) {
-    header('Location: mis_uploads.php');
+    header('Location: ../mis_uploads.php');
     exit();
 }
 
@@ -27,12 +27,12 @@ try {
 
     $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
     if (!$row || ($row['user_id'] != $_SESSION['usuario_id'] && !$isAdmin)) {
-        header('Location: mis_uploads.php');
+        header('Location: ../mis_uploads.php');
         exit();
     }
 
     // Borrar archivo físico
-    $file = dirname(__DIR__) . '/' . $row['filepath'];
+    $file = dirname(__DIR__, 2) . '/' . $row['filepath'];
     if (is_file($file)) {
         @unlink($file);
     }
@@ -41,11 +41,11 @@ try {
     $stmt = $pdo->prepare('DELETE FROM uploads WHERE id = :id');
     $stmt->execute(['id' => $id]);
 
-    header('Location: mis_uploads.php');
+    header('Location: ../mis_uploads.php');
     exit();
 } catch (PDOException $e) {
     error_log('Delete upload error: ' . $e->getMessage());
-    header('Location: mis_uploads.php');
+    header('Location: ../mis_uploads.php');
     exit();
 }
 ?>

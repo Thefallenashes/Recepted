@@ -7,6 +7,20 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+// Only accessible via the button in config.php
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $t = $_GET['t'] ?? '';
+    if (!empty($t) && isset($_SESSION['perfil_token']) && hash_equals($_SESSION['perfil_token'], $t)) {
+        $_SESSION['perfil_active'] = true;
+    } elseif (empty($_SESSION['perfil_active'])) {
+        header('Location: config.php');
+        exit();
+    }
+} elseif (!isset($_SESSION['perfil_active'])) {
+    header('Location: config.php');
+    exit();
+}
+
 $mensaje = '';
 $tipo = '';
 
@@ -118,6 +132,7 @@ try {
                     <input id="edad" name="edad" type="number" min="13" max="120" value="<?php echo htmlspecialchars($usuario['edad']); ?>">
                 </div>
                 <button class="btn" type="submit">Guardar</button>
+                <a class="btn" href="config.php">Volver a Configuración</a>
             </form>
         <?php else: ?>
             <p>Usuario no encontrado.</p>

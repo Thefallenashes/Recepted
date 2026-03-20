@@ -37,7 +37,7 @@ try {
     }
 
     $relative = $row['filepath']; // e.g. uploads/abc.png
-    $file = dirname(__DIR__) . '/' . $relative; // points to src/uploads/...
+    $file = dirname(__DIR__, 2) . '/' . $relative; // points to src/uploads/...
 
     if (!is_file($file)) {
         http_response_code(404);

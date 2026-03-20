@@ -50,11 +50,10 @@ try {
             <nav class="sticky-links">
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">panel de administrador</a></li>
+                        <li><a href="admin_panel.php">Panel de administracion</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
                         <li><a href="superadmin_console.php">Consola</a></li>
@@ -108,7 +107,7 @@ try {
             </table>
         <?php endif; ?>
 
-        <p><a href="scripts/upload.php">Subir nuevo archivo</a> | <a href="analizar_excel.php">Analizar Excel</a> | <a href="perfil.php">Volver al perfil</a> | <a href="scripts/logout.php">Cerrar Sesión</a></p>
+        <p><a href="scripts/upload.php">Subir nuevo archivo</a> | <a href="analizar_excel.php">Analizar Excel</a> | <a href="scripts/logout.php">Cerrar Sesión</a></p>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>

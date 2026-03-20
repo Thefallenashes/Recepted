@@ -39,6 +39,11 @@ try {
     $stmt = $pdo->prepare('SELECT * FROM finanzas WHERE user_id = :user_id');
     $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
     $finanzas = $stmt->fetch();
+
+    // Obtener las 5 transacciones más recientes
+    $stmt = $pdo->prepare('SELECT * FROM transactions WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 5');
+    $stmt->execute(['user_id' => $_SESSION['usuario_id']]);
+    $recent_transactions = $stmt->fetchAll();
 } catch (PDOException $e) {
     echo "Error al conectar: " . htmlspecialchars($e->getMessage());
     exit();
@@ -70,10 +75,9 @@ try {
             <nav class="navbar sticky-links">
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">panel de administrador</a></li>
+                        <li><a href="admin_panel.php">Panel de administracion</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
                         <li><a href="superadmin_console.php">Consola</a></li>
@@ -126,6 +130,34 @@ try {
                         </div>
                     <?php else: ?>
                         <p>No hay información financiera disponible.</p>
+                    <?php endif; ?>
+
+                    <h3>Últimas transacciones</h3>
+                    <?php if (!empty($recent_transactions)): ?>
+                        <table class="recent-transactions">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Categoría</th>
+                                    <th>Descripción</th>
+                                    <th>Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_transactions as $tx): ?>
+                                    <tr class="tx-<?php echo htmlspecialchars($tx['type']); ?>">
+                                        <td><?php echo date('d/m/Y', strtotime($tx['created_at'])); ?></td>
+                                        <td><?php echo $tx['type'] === 'income' ? 'Ingreso' : 'Gasto'; ?></td>
+                                        <td><?php echo htmlspecialchars($tx['category']); ?></td>
+                                        <td><?php echo htmlspecialchars($tx['description'] ?? '—'); ?></td>
+                                        <td class="tx-amount"><?php echo ($tx['type'] === 'income' ? '+' : '-') . number_format($tx['amount'], 2); ?> <?php echo $finanzas ? htmlspecialchars($finanzas['currency']) : ''; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>No hay transacciones registradas.</p>
                     <?php endif; ?>
                 </div>
             </section>

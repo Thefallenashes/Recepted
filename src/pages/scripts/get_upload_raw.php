@@ -46,9 +46,9 @@ try {
         exit('Tipo de archivo no permitido para análisis.');
     }
 
-    $file = dirname(__DIR__) . '/' . $row['filepath'];
+    $file = dirname(__DIR__, 2) . '/' . $row['filepath'];
     // Asegurar que la ruta resuelta esté dentro del directorio de uploads
-    $uploadsBase = realpath(dirname(__DIR__) . '/uploads');
+    $uploadsBase = realpath(dirname(__DIR__, 2) . '/uploads');
     $realFile    = realpath($file);
     if ($realFile === false || strpos($realFile, $uploadsBase) !== 0) {
         http_response_code(403);

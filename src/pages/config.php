@@ -9,6 +9,11 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+// Generate one-time access token for perfil.php and clear any active perfil session
+$perfil_token = bin2hex(random_bytes(16));
+$_SESSION['perfil_token'] = $perfil_token;
+unset($_SESSION['perfil_active']);
+
 $mensaje = '';
 $tipo = '';
 
@@ -68,11 +73,10 @@ try {
             <nav class="sticky-links">
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="admin_panel.php">panel de administrador</a></li>
+                        <li><a href="admin_panel.php">Panel de administracion</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
                         <li><a href="superadmin_console.php">Consola</a></li>
@@ -95,6 +99,12 @@ try {
             </div>
             <button class="btn" type="submit">Guardar</button>
         </form>
+
+        <div class="config-section">
+            <h2>Información de la cuenta</h2>
+            <p>Actualiza tu nombre, apellidos y edad.</p>
+            <a class="btn" href="perfil.php?t=<?php echo htmlspecialchars($perfil_token); ?>">Actualizar informacion de la cuenta</a>
+        </div>
 
         <p><a href="home.php">Volver al inicio</a></p>
     </div>

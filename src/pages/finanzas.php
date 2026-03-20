@@ -59,12 +59,14 @@ try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS expense_categories (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id BIGINT UNSIGNED NOT NULL,
+        type ENUM('income','expense') NOT NULL DEFAULT 'expense',
         name VARCHAR(80) NOT NULL,
         color VARCHAR(7) NOT NULL DEFAULT '#4CAF50',
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         INDEX idx_categories_user (user_id),
-        UNIQUE KEY unique_user_category (user_id, name)
+        INDEX idx_categories_type (type),
+        UNIQUE KEY unique_user_category (user_id, type, name)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS transactions (
@@ -93,6 +95,28 @@ try {
         }
     }
 
+    // Asegurar columna type en categorías para separar gastos/ingresos
+    $checkCategoryType = $pdo->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='expense_categories' AND COLUMN_NAME='type'");
+    if ($checkCategoryType->rowCount() === 0) {
+        try {
+            $pdo->exec("ALTER TABLE expense_categories ADD COLUMN type ENUM('income','expense') NOT NULL DEFAULT 'expense' AFTER user_id");
+        } catch (PDOException $e) {
+            // Columna ya existe o no se pudo modificar en este momento
+        }
+    }
+
+    // Intentar actualizar índice único para permitir mismo nombre en tipos distintos
+    try {
+        $pdo->exec("ALTER TABLE expense_categories DROP INDEX unique_user_category");
+    } catch (PDOException $e) {
+        // Índice no existente o ya actualizado
+    }
+    try {
+        $pdo->exec("ALTER TABLE expense_categories ADD UNIQUE KEY unique_user_category (user_id, type, name)");
+    } catch (PDOException $e) {
+        // Índice ya existe o no se pudo crear
+    }
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS savings_goals (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id BIGINT UNSIGNED NOT NULL,
@@ -113,15 +137,20 @@ try {
 
         if ($action === 'add_category') {
             $categoryName = trim($_POST['category_name'] ?? '');
+            $categoryType = $_POST['category_type'] ?? 'expense';
+            if (!in_array($categoryType, ['income', 'expense'], true)) {
+                $categoryType = 'expense';
+            }
 
             if ($categoryName === '') {
                 $tipo = 'error';
                 $mensaje = 'El nombre de la categoría es necesario.';
             } else {
                 try {
-                       $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, name) VALUES (:user_id, :name)');
+                       $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
                     $stmt->execute([
                         'user_id' => $userId,
+                        'type' => $categoryType,
                         'name' => $categoryName,
                     ]);
                     $tipo = 'exito';
@@ -174,7 +203,9 @@ try {
 
             $amount = (float)($_POST['amount'] ?? 0);
             $description = trim($_POST['description'] ?? '');
-            $categoryId = (int)($_POST['category_id'] ?? 0);
+            $categoryId = $type === 'income'
+                ? (int)($_POST['category_id_income'] ?? 0)
+                : (int)($_POST['category_id_expense'] ?? 0);
 
             if ($amount <= 0 || $categoryId <= 0) {
                 $tipo = 'error';
@@ -184,33 +215,40 @@ try {
                 $category = categorize_transaction($description, $type);
 
                 if ($categoryIdToUse !== null) {
-                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id LIMIT 1');
+                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id AND type = :type LIMIT 1');
                     $stmt->execute([
                         'id' => $categoryIdToUse,
                         'user_id' => $userId,
+                        'type' => $type,
                     ]);
                     $customCategoryName = $stmt->fetchColumn();
                     if (is_string($customCategoryName) && $customCategoryName !== '') {
                         $category = $customCategoryName;
+                    } else {
+                        $tipo = 'error';
+                        $mensaje = 'La categoría seleccionada no es válida para el tipo de transacción.';
+                        $categoryIdToUse = 0;
                     }
                 }
-                
-                $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
-                $stmt->execute([
-                    'user_id' => $userId,
-                    'type' => $type,
-                    'amount' => $amount,
-                    'category' => $category,
-                    'category_id' => $categoryIdToUse,
-                    'description' => $description,
-                ]);
 
-                if (function_exists('record_audit_log')) {
-                    record_audit_log($pdo, 'transaction_created', 'info', 'Transacción registrada y categorizada automáticamente');
+                if ($categoryIdToUse > 0) {
+                    $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
+                    $stmt->execute([
+                        'user_id' => $userId,
+                        'type' => $type,
+                        'amount' => $amount,
+                        'category' => $category,
+                        'category_id' => $categoryIdToUse,
+                        'description' => $description,
+                    ]);
+
+                    if (function_exists('record_audit_log')) {
+                        record_audit_log($pdo, 'transaction_created', 'info', 'Transacción registrada y categorizada automáticamente');
+                    }
+
+                    $tipo = 'exito';
+                    $mensaje = 'Transacción añadida correctamente.';
                 }
-
-                $tipo = 'exito';
-                $mensaje = 'Transacción añadida correctamente.';
             }
         }
 
@@ -334,9 +372,18 @@ try {
     }
 
     // Obtener categorías personalizadas del usuario
-    $stmt = $pdo->prepare('SELECT id, name, color FROM expense_categories WHERE user_id = :user_id ORDER BY name ASC');
+    $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY type ASC, name ASC');
     $stmt->execute(['user_id' => $userId]);
     $personalCategories = $stmt->fetchAll();
+    $expenseCategories = [];
+    $incomeCategories = [];
+    foreach ($personalCategories as $cat) {
+        if (($cat['type'] ?? 'expense') === 'income') {
+            $incomeCategories[] = $cat;
+        } else {
+            $expenseCategories[] = $cat;
+        }
+    }
 
     $stmt = $pdo->prepare("SELECT t.id, t.type, t.amount, t.category, t.description, t.created_at, t.category_id, COALESCE(ec.name, t.category) AS display_category
         FROM transactions t
@@ -366,9 +413,10 @@ try {
             ec.name,
             COALESCE(SUM(t.amount), 0) AS total,
             COUNT(t.id) AS transaction_count
-        FROM expense_categories ec
+                FROM expense_categories ec
         LEFT JOIN transactions t ON ec.id = t.category_id AND t.type = 'expense'
         WHERE ec.user_id = :user_id
+                    AND ec.type = 'expense'
            GROUP BY ec.id, ec.name
         ORDER BY total DESC
     ");
@@ -426,6 +474,8 @@ try {
         'currency' => 'EUR',
     ];
     $personalCategories = [];
+    $expenseCategories = [];
+    $incomeCategories = [];
     $transactions = [];
     $expenseByCategory = [];
     $maxCategoryTotal = 0.0;
@@ -458,7 +508,6 @@ try {
             <nav class="sticky-links">
                 <ul>
                     <li><a href="finanzas.php">Finanzas</a></li>
-                    <li><a href="perfil.php">Perfil</a></li>
                     <li><a href="tickets.php">Tickets</a></li>
                     <li><a href="config.php">Configuración</a></li>
                 </ul>
@@ -509,10 +558,19 @@ try {
                     <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
                 </div>
                 <div class="form-group">
-                    <label for="category_id">Categoría</label>
-                    <select id="category_id" name="category_id" required>
+                    <label for="category_id_expense">Categoría (gasto)</label>
+                    <select id="category_id_expense" name="category_id_expense">
                         <option value="" selected disabled hidden></option>
-                        <?php foreach ($personalCategories as $cat): ?>
+                        <?php foreach ($expenseCategories as $cat): ?>
+                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group" id="income-category-group" style="display: none;">
+                    <label for="category_id_income">Categoría (ingreso)</label>
+                    <select id="category_id_income" name="category_id_income">
+                        <option value="" selected disabled hidden></option>
+                        <?php foreach ($incomeCategories as $cat): ?>
                             <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -527,9 +585,15 @@ try {
             <h2>Gastos por categoría</h2>
             
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 1rem; margin: 0 0 12px 0; color: #475569;">Crear nueva categoría</h3>
                 <form method="POST" action="" class="panel-form" style="margin: 0;">
                     <input type="hidden" name="action" value="add_category">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label for="category_type">Tipo de categoría</label>
+                        <select id="category_type" name="category_type" required>
+                            <option value="expense" selected>Gasto</option>
+                            <option value="income">Ingreso</option>
+                        </select>
+                    </div>
                        <div style="display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: flex-end;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="category_name">Nombre</label>
@@ -539,17 +603,15 @@ try {
                     </div>
                 </form>
             </div>
-
+            <h2>Categorías:</h2>
             <div class="panel-form" style="margin-bottom: 20px;">
-                <h3 style="font-size: 1rem; margin: 0 0 12px 0; color: #475569;">Selector único de categorías</h3>
                 <?php if (empty($personalCategories)): ?>
-                    <p>No hay categorías para mostrar en el gráfico.</p>
                 <?php else: ?>
                     <div class="category-selector-row">
                         <select id="selected_category_id" name="selected_category_id" class="category-select" onchange="renderCategoryLineChart()">
                             <option value="" selected disabled>Elije una categoria</option>
                             <?php foreach ($personalCategories as $cat): ?>
-                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?> (<?php echo ($cat['type'] ?? 'expense') === 'income' ? 'Ingreso' : 'Gasto'; ?>)</option>
                             <?php endforeach; ?>
                         </select>
                         <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
@@ -563,7 +625,6 @@ try {
             </div>
 
             <?php if (empty($expensesByPersonalCategory)): ?>
-                <p>No tienes categorías personalizadas aún.</p>
             <?php else: ?>
                 <div class="category-expenses-list">
                     <?php foreach ($expensesByPersonalCategory as $index => $cat): ?>
@@ -702,6 +763,8 @@ try {
     <script src="../js/sticky-menu-toggle.js" defer></script>
     <script>
         const categorySeries = <?php echo json_encode($chartSeriesByCategory, JSON_UNESCAPED_UNICODE); ?>;
+        const expenseCategoriesCount = <?php echo (int)count($expenseCategories); ?>;
+        const incomeCategoriesCount = <?php echo (int)count($incomeCategories); ?>;
 
         function toggleCategory(categoryId) {
             const details = document.getElementById('details-' + categoryId);
@@ -718,12 +781,35 @@ try {
 
         function updateCategorySelector() {
             const typeSelect = document.getElementById('type');
-            const categorySelect = document.getElementById('category_id');
-            
+            const expenseSelect = document.getElementById('category_id_expense');
+            const incomeSelect = document.getElementById('category_id_income');
+            const incomeGroup = document.getElementById('income-category-group');
+
+            if (!typeSelect || !expenseSelect || !incomeSelect || !incomeGroup) {
+                return;
+            }
+
             if (typeSelect.value === 'expense') {
-                categorySelect.parentElement.style.display = 'block';
+                expenseSelect.parentElement.style.display = 'block';
+                incomeGroup.style.display = 'none';
+                expenseSelect.required = true;
+                incomeSelect.required = false;
+                incomeSelect.value = '';
             } else {
-                categorySelect.parentElement.style.display = 'none';
+                expenseSelect.parentElement.style.display = 'none';
+                incomeGroup.style.display = 'block';
+                expenseSelect.required = false;
+                incomeSelect.required = true;
+                expenseSelect.value = '';
+            }
+
+            if (typeSelect.value === 'expense' && expenseCategoriesCount === 0) {
+                expenseSelect.setCustomValidity('Primero crea una categoría de gasto.');
+            } else if (typeSelect.value === 'income' && incomeCategoriesCount === 0) {
+                incomeSelect.setCustomValidity('Primero crea una categoría de ingreso.');
+            } else {
+                expenseSelect.setCustomValidity('');
+                incomeSelect.setCustomValidity('');
             }
         }
 

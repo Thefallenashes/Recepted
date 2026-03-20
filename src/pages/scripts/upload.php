@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../utils/db.php';
 require_once __DIR__ . '/../../utils/auth.php';
 
 if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
 }
 
@@ -22,7 +22,7 @@ $allowedMimeTypesByExtension = [
     'xltx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.template', 'application/zip', 'application/octet-stream'],
 ];
 $allowedExtensions = array_keys($allowedMimeTypesByExtension);
-$uploadDir = __DIR__ . '/../uploads/';
+$uploadDir = dirname(__DIR__, 2) . '/uploads/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_FILES['file'])) {
@@ -54,12 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
 
             $detectedMime = null;
-            if (function_exists('finfo_open')) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                if ($finfo !== false) {
-                    $detectedMime = finfo_file($finfo, $file['tmp_name']) ?: null;
-                    finfo_close($finfo);
-                }
+            if (class_exists('finfo')) {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $detectedMime = $finfo->file($file['tmp_name']) ?: null;
             }
 
             $clientMime = strtolower((string) ($file['type'] ?? ''));
@@ -76,7 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $tipo = 'error';
                     $mensaje = 'El tipo de archivo detectado no coincide con la extensión seleccionada.';
                 } else {
-                    $newName = $_SESSION['usuario_id'] . '_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $safeExt;
+                    try {
+                        $randomSuffix = bin2hex(random_bytes(6));
+                    } catch (Exception $e) {
+                        $randomSuffix = bin2hex((string) mt_rand()) . bin2hex((string) microtime(true));
+                    }
+
+                    $newName = $_SESSION['usuario_id'] . '_' . time() . '_' . $randomSuffix . '.' . $safeExt;
                     $destination = $uploadDir . $newName;
 
                     if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
@@ -92,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $relativePath = 'uploads/' . $newName;
                             $stmt->execute([
                                 'user_id' => $_SESSION['usuario_id'],
-                                'filename' => $file['name'],
+                                'filename' => basename((string) $file['name']),
                                 'filepath' => $relativePath,
-                                'mime' => $effectiveMime !== '' ? $effectiveMime : $clientMime,
+                                'mime' => $effectiveMime !== '' ? $effectiveMime : ($clientMime !== '' ? $clientMime : 'application/octet-stream'),
                                 'size' => $file['size']
                             ]);
 
@@ -144,11 +147,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <nav class="sticky-links">
                 <ul>
                     <li><a href="../finanzas.php">Finanzas</a></li>
-                    <li><a href="../perfil.php">Perfil</a></li>
                     <li><a href="../tickets.php">Tickets</a></li>
                     <li><a href="../config.php">Configuración</a></li>
                     <?php if (function_exists('has_min_role') && has_min_role('admin')): ?>
-                        <li><a href="../admin_panel.php">panel de administrador</a></li>
+                        <li><a href="../admin_panel.php">Panel de administracion</a></li>
                     <?php endif; ?>
                     <?php if (function_exists('has_min_role') && has_min_role('superadmin')): ?>
                         <li><a href="../superadmin_console.php">Consola</a></li>
@@ -162,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Subir archivo</h1>
 
         <?php if ($mensaje): ?>
-            <div class="mensaje <?php echo $tipo; ?>"><?php echo $mensaje; ?></div>
+            <div class="mensaje <?php echo htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($mensaje, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
 
         <form method="post" action="" enctype="multipart/form-data">
@@ -173,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="btn" type="submit">Subir</button>
         </form>
 
-        <p><a href="../perfil.php">Volver al perfil</a> | <a href="../scripts/logout.php">Cerrar Sesión</a></p>
+        <p><a href="../scripts/logout.php">Cerrar Sesión</a></p>
     </div>
     <script src="../../js/sticky-menu-toggle.js" defer></script>
 </body>

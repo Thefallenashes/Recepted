@@ -262,6 +262,45 @@ h1, h2, h3, h4, h5, h6 {
     color: #be123c;
 }
 
+.finance-summary h3 {
+    margin: 20px 0 10px;
+    color: #0b1739;
+    font-size: 1.05rem;
+}
+
+.recent-transactions {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.recent-transactions th,
+.recent-transactions td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-transactions th {
+    color: #475569;
+    font-weight: 600;
+    background: #f1f5f9;
+}
+
+.recent-transactions tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.recent-transactions tr.tx-income .tx-amount {
+    color: #0f766e;
+    font-weight: 700;
+}
+
+.recent-transactions tr.tx-expense .tx-amount {
+    color: #be123c;
+    font-weight: 700;
+}
+
 @media (max-width: 900px) {
     .sticky-home-menu-inner {
         width: 90%;

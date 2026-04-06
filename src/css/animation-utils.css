@@ -1,0 +1,26 @@
+/**
+ * ANIMATION UTILITIES � minimal helper classes
+ */
+
+/* Manual entrance animations (opt-in only) */
+.animate-fade-in {
+    animation: fadeIn var(--transition-base) var(--ease-out) both;
+}
+
+.animate-slide-in-up {
+    animation: slideInUp var(--transition-base) var(--ease-out) both;
+}
+
+.animate-slide-in-down {
+    animation: slideInDown var(--transition-base) var(--ease-out) both;
+}
+
+/* Delay utilities */
+.animate-delay-1 { animation-delay: 100ms; }
+.animate-delay-2 { animation-delay: 200ms; }
+.animate-delay-3 { animation-delay: 300ms; }
+
+/* Transition utilities */
+.transition-fast   { transition: all var(--transition-fast)  var(--ease-in-out); }
+.transition-base   { transition: all var(--transition-base)  var(--ease-in-out); }
+.transition-slow   { transition: all var(--transition-slow)  var(--ease-in-out); }

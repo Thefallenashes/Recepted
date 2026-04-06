@@ -1,0 +1,168 @@
+/**
+ * Animations & Transitions � minimal set
+ * Only keyframes actually used + interaction transitions
+ */
+
+/* ============================================
+   KEYFRAMES (only what's actively used)
+   ============================================ */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+    0%   { background-position: -800px 0; }
+    100% { background-position:  800px 0; }
+}
+
+/* ============================================
+   CSS CUSTOM PROPERTIES
+   ============================================ */
+
+:root {
+    --transition-fast:  150ms;
+    --transition-base:  250ms;
+    --transition-slow:  400ms;
+    --ease-out:         cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out:      cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   ALERTS � single entrance only
+   ============================================ */
+
+.alert {
+    animation: slideInDown var(--transition-base) var(--ease-out) both;
+}
+
+/* ============================================
+   BUTTONS � hover/active only
+   ============================================ */
+
+.btn {
+    transition: background-color var(--transition-fast) var(--ease-in-out),
+                box-shadow       var(--transition-fast) var(--ease-in-out),
+                border-color     var(--transition-fast) var(--ease-in-out),
+                color            var(--transition-fast) var(--ease-in-out);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ripple on click */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: width var(--transition-base), height var(--transition-base);
+}
+
+.btn:active::before {
+    width: 280px;
+    height: 280px;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 16px rgba(53, 64, 233, 0.3);
+}
+
+.btn-success:hover {
+    box-shadow: 0 4px 14px rgba(76, 175, 80, 0.3);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 4px 14px rgba(244, 67, 54, 0.3);
+}
+
+/* ============================================
+   CARDS � hover shadow only
+   ============================================ */
+
+.card {
+    transition: box-shadow var(--transition-fast) var(--ease-in-out),
+                border-color var(--transition-fast) var(--ease-in-out);
+}
+
+/* ============================================
+   FORM INPUTS � focus ring only
+   ============================================ */
+
+.form-input,
+.form-select,
+.form-textarea {
+    transition: border-color var(--transition-fast) var(--ease-in-out),
+                box-shadow   var(--transition-fast) var(--ease-in-out);
+}
+
+/* ============================================
+   TABLE ROWS � hover background only
+   ============================================ */
+
+.table tbody tr {
+    transition: background-color var(--transition-fast) var(--ease-in-out);
+}
+
+/* ============================================
+   LINKS � color only
+   ============================================ */
+
+a {
+    transition: color var(--transition-fast) var(--ease-in-out);
+}
+
+/* ============================================
+   LOADING UTILITIES
+   ============================================ */
+
+.loading-spinner {
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, var(--color-bg-soft), var(--color-bg-hover), var(--color-bg-soft));
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+
+.progress-fill {
+    transition: width var(--transition-slow) var(--ease-in-out);
+}
+
+/* ============================================
+   ACCESSIBILITY � respect reduced motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 1ms !important;
+    }
+}

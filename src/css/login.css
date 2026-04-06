@@ -1,4 +1,4 @@
-@import url('./shared.css');
+@import url('./components.css');
 
 * {
     box-sizing: border-box;
@@ -10,15 +10,14 @@ body {
     display: grid;
     place-items: center;
     padding: 24px;
-    font-family: "Roboto Serif", Georgia, serif;
-    font-weight: 300;
-    color: #0f172a;
-    background: #ffffff;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 400;
+    color: #2C3E50;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "Comfortaa", "Segoe UI", sans-serif;
-    font-weight: 400;
+    font-family: "Comfortaa", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
 }
 
 .login-container {
@@ -74,7 +73,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid #cbd5e1;
-    background: #ffffff;
+    background: var(--color-surface);
     color: #0f172a;
     outline: none;
 }

@@ -72,86 +72,84 @@ try {
     ?>
 
     <div class="home-container">
-        <header class="header">
-            <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
-            <form method="POST" action="" style="margin: 10px 0;">
-                <button type="submit" name="debug" value="1">Modo de desarollo</button>
-            </form>
+        <header class="card mb-4">
+            <div class="card-header">
+                <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
+                <form method="POST" action="">
+                    <button type="submit" name="debug" value="1" class="btn btn-sm btn-secondary">Modo desarrollo</button>
+                </form>
+            </div>
         </header>
 
         <main class="content">
-            <section class="dashboard">
-                <div class="user-info">
-                    <h2>Información del Usuario</h2>
-                    <p><strong>Nombre:</strong> <?php echo htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidos']); ?></p>
-                    <p><strong>Correo:</strong> <?php echo htmlspecialchars($usuario['correo']); ?></p>
-                    <p><strong>Edad:</strong> <?php echo htmlspecialchars($usuario['edad']); ?> años</p>
-                    <p><strong>Miembro desde:</strong> <?php echo date('d/m/Y', strtotime($usuario['created_at'])); ?></p>
+            <section class="grid grid-cols-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Información del Usuario</h2>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nombre:</strong> <?php echo htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidos']); ?></p>
+                        <p><strong>Correo:</strong> <?php echo htmlspecialchars($usuario['correo']); ?></p>
+                        <p><strong>Edad:</strong> <?php echo htmlspecialchars($usuario['edad']); ?> años</p>
+                        <p><strong>Miembro desde:</strong> <?php echo date('d/m/Y', strtotime($usuario['created_at'])); ?></p>
+                    </div>
                 </div>
 
-                <div class="finance-summary">
-        <!-- #region           <h2>Resumen Financiero</h2>
-                    <?php if ($finanzas): ?>
-                        <div class="finance-box">
-                            <div class="finance-item">
-                                <label>Balance:</label>
-                                <span class="balance"><?php echo number_format($finanzas['balance'], 2); ?> <?php echo $finanzas['currency']; ?></span>
-                            </div>
-                            <div class="finance-item">
-                                <label>Ingresos:</label>
-                                <span class="income"><?php echo number_format($finanzas['income'], 2); ?> <?php echo $finanzas['currency']; ?></span>
-                            </div>
-                            <div class="finance-item">
-                                <label>Gastos:</label>
-                                <span class="expenses"><?php echo number_format($finanzas['expenses'], 2); ?> <?php echo $finanzas['currency']; ?></span>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <p>No hay información financiera disponible.</p>
-                    <?php endif; ?>
--->
-                    <h2>Últimas transacciones</h2>
-                    <?php if (!empty($recent_transactions)): ?>
-                        <table class="recent-transactions">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Tipo</th>
-                                    <th>Categoría</th>
-                                    <th>Descripción</th>
-                                    <th>Importe</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recent_transactions as $tx): ?>
-                                    <tr class="tx-<?php echo htmlspecialchars($tx['type']); ?>">
-                                        <td><?php echo date('d/m/Y', strtotime($tx['created_at'])); ?></td>
-                                        <td><?php echo $tx['type'] === 'income' ? 'Ingreso' : 'Gasto'; ?></td>
-                                        <td><?php echo htmlspecialchars($tx['category']); ?></td>
-                                        <td><?php echo htmlspecialchars($tx['description'] ?? '—'); ?></td>
-                                        <td class="tx-amount"><?php echo ($tx['type'] === 'income' ? '+' : '-') . number_format($tx['amount'], 2); ?> <?php echo $finanzas ? htmlspecialchars($finanzas['currency']) : ''; ?></td>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Últimas transacciones</h2>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($recent_transactions)): ?>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Categoría</th>
+                                        <th>Descripción</th>
+                                        <th>Importe</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php else: ?>
-                        <p>No hay transacciones registradas.</p>
-                    <?php endif; ?>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recent_transactions as $tx): ?>
+                                        <tr class="tx-<?php echo htmlspecialchars($tx['type']); ?>">
+                                            <td><?php echo date('d/m/Y', strtotime($tx['created_at'])); ?></td>
+                                            <td><?php echo $tx['type'] === 'income' ? 'Ingreso' : 'Gasto'; ?></td>
+                                            <td><?php echo htmlspecialchars($tx['category']); ?></td>
+                                            <td><?php echo htmlspecialchars($tx['description'] ?? '—'); ?></td>
+                                            <td class="tx-amount"><?php echo ($tx['type'] === 'income' ? '+' : '-') . number_format($tx['amount'], 2); ?> <?php echo $finanzas ? htmlspecialchars($finanzas['currency']) : ''; ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p class="text-muted">No hay transacciones registradas.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </section>
 
-                    <h3>Archivos</h3>
+            <section class="card mt-4">
+                <div class="card-header">
+                    <h2>Mis Archivos</h2>
+                </div>
+                <div class="card-body">
                     <?php if (empty($uploads)): ?>
-                        <div class="uploads-cta">
-                            <p>¡Comienza a analizar tus finanzas! Para comenzar sube y analiza tus archivos Excel</p>
-                            <a href="mis_uploads.php" class="btn-uploads">Ir a mis archivos →</a>
+                        <div class="text-center py-4">
+                            <p class="mb-3">¡Comienza a analizar tus finanzas! Para comenzar sube y analiza tus archivos Excel</p>
+                            <a href="mis_uploads.php" class="btn btn-primary">Ir a mis archivos →</a>
                         </div>
                     <?php else: ?>
-                        <p class="uploads-link">Tienes <?php echo count($uploads); ?> archivo<?php echo count($uploads) !== 1 ? 's' : ''; ?> subido<?php echo count($uploads) !== 1 ? 's' : ''; ?>. <a href="mis_uploads.php">Ver mis archivos</a></p>
+                        <p>Tienes <?php echo count($uploads); ?> archivo<?php echo count($uploads) !== 1 ? 's' : ''; ?> subido<?php echo count($uploads) !== 1 ? 's' : ''; ?>. <a href="mis_uploads.php" class="text-primary">Ver mis archivos</a></p>
                     <?php endif; ?>
                 </div>
             </section>
         </main>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
+    <script src="../js/mobile-menu-enhancements.js" defer></script>
+    <script src="../js/animation-manager.js" defer></script>
 </body>
 
 </html>

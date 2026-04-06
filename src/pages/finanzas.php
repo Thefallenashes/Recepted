@@ -509,30 +509,39 @@ try {
     ]);
     ?>
 
-    <div class="finanzas-container">
-        <h1>Finanzas</h1>
+    <div class="finanzas-container card">
+        <div class="card-header">
+            <h1>Finanzas</h1>
+        </div>
+        <div class="card-body">
 
         <?php if ($mensaje): ?>
-            <div class="mensaje <?php echo $tipo; ?>"><?php echo $mensaje; ?></div>
+            <div class="alert alert-<?php echo $tipo === 'exito' ? 'success' : 'error'; ?>">
+                <span class="alert-icon">ℹ️</span>
+                <span><?php echo $mensaje; ?></span>
+            </div>
         <?php endif; ?>
 
         <?php if ($finanzas): ?>
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <h2>Balance</h2>
-                    <p><?php echo number_format((float)$finanzas['balance'], 2); ?> <?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></p>
+            <div class="grid grid-cols-3">
+                <div class="stat-box primary">
+                    <div class="stat-label">Balance</div>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['balance'], 2); ?></p>
+                    <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
-                <div class="summary-card">
-                    <h2>Ingresos</h2>
-                    <p><?php echo number_format((float)$finanzas['income'], 2); ?> <?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></p>
+                <div class="stat-box success">
+                    <div class="stat-label">Ingresos</div>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['income'], 2); ?></p>
+                    <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
-                <div class="summary-card">
-                    <h2>Gastos</h2>
-                    <p><?php echo number_format((float)$finanzas['expenses'], 2); ?> <?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></p>
+                <div class="stat-box danger">
+                    <div class="stat-label">Gastos</div>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['expenses'], 2); ?></p>
+                    <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
             </div>
 
-            <h2>Nueva transacción</h2>
+            <h2 class="mt-4 mb-2">Nueva transacción</h2>
             <form method="POST" action="" class="panel-form">
                 <input type="hidden" name="action" value="add_transaction">
                 <div class="form-group">
@@ -747,9 +756,11 @@ try {
         <?php else: ?>
             <p>No hay información financiera. Contacta con soporte.</p>
         <?php endif; ?>
-
+        </div>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
+    <script src="../js/mobile-menu-enhancements.js" defer></script>
+    <script src="../js/animation-manager.js" defer></script>
     <script>
         const categorySeries = <?php echo json_encode($chartSeriesByCategory, JSON_UNESCAPED_UNICODE); ?>;
         const expenseCategoriesCount = <?php echo (int)count($expenseCategories); ?>;

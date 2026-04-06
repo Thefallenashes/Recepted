@@ -1,10 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400&family=Roboto+Serif:opsz,wght@8..144,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --color-primary: #0f172a;
-    --color-secondary: #1e293b;
-    --color-border: #e2e8f0;
-    --color-accent: #BAEBFA;
-    --color-accent-hover: #a9dcec;
-    --color-bg-soft: #f8fafc;
+    /* YNAB Blurple Palette */
+    --color-primary: #3540E9;
+    --color-secondary: #5F6BFF;
+    --color-accent: #85B4FF;
+    --color-accent-hover: #6FA8FF;
+    --color-bg-soft: #F8F9FB;
+    
+    /* Status colors */
+    --color-success: #4CAF50;
+    --color-warning: #FFC107;
+    --color-danger: #F44336;
+    
+    /* UI colors */
+    --color-border: #E0E6F0;
+    --color-text: #2C3E50;
+    --color-text-light: #657786;
+    --color-bg-hover: #F3F5F8;
+    --color-surface: #FCFCF8;
+
+    /* Side accent colors */
+    --color-cyan: #59CAE3;
+    --color-cyan-glow: rgba(89, 202, 227, 0.28);
+    --color-cyan-soft: rgba(89, 202, 227, 0.10);
+    --color-green-side: #3FA565;
+    --color-green-glow: rgba(63, 165, 101, 0.28);
+    --color-green-soft: rgba(63, 165, 101, 0.10);
 }

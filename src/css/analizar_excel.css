@@ -1,7 +1,10 @@
+@import url('./components.css');
+
 .ae-container {
     max-width: 1100px;
     margin: 36px auto;
     padding: 0 20px;
+    min-height: calc(100vh - 90px);
 }
 
 .ae-container h1 {
@@ -43,7 +46,7 @@
     border: 1px solid #cbd5e1;
     font-size: 0.95rem;
     font-family: inherit;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 .ae-btn {
@@ -81,7 +84,7 @@
     padding: 7px 18px;
     border-radius: 999px;
     border: 1px solid #cbd5e1;
-    background: #ffffff;
+    background: var(--color-surface);
     cursor: pointer;
     font-family: inherit;
     font-size: 0.875rem;
@@ -154,7 +157,7 @@
 }
 
 .ae-chart-area {
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 24px;

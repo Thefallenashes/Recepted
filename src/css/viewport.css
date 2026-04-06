@@ -1,0 +1,119 @@
+/* Viewport and Meta Optimization for Mobile */
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent zoom on input focus (iOS) */
+input,
+select,
+textarea {
+    font-size: 16px !important;
+}
+
+/* Touch-friendly tap targets (minimum 44x44px recommended) */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Prevent text selection on buttons */
+button,
+a.btn {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Improve visibility of focus states for keyboard navigation */
+*:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Disable default blue highlight on iOS */
+-webkit-tap-highlight-color: rgba(53, 64, 233, 0.1);
+
+/* Smooth transitions on mobile */
+* {
+    -webkit-transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button,
+a {
+    -webkit-transition: all 0.2s ease;
+}
+
+/* Fix for mobile viewport issues */
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    /* Ensure text doesn't get too small */
+    body {
+        font-size: 16px;
+    }
+
+    /* Improve readability */
+    p {
+        line-height: 1.6;
+    }
+
+    /* Make images responsive */
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* Better spacing on mobile */
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Readable list items */
+    li {
+        line-height: 1.8;
+    }
+}
+
+/* Dark mode support (optional future use) */
+@media (prefers-color-scheme: dark) {
+    /* Can add dark mode styles here when ready */
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media print {
+    body {
+        background: white;
+    }
+
+    .sticky-menu,
+    .sticky-page-menu,
+    .no-print {
+        display: none;
+    }
+}

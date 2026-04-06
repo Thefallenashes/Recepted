@@ -1,4 +1,4 @@
-@import url('./shared.css');
+@import url('./components.css');
 
 * {
     box-sizing: border-box;
@@ -6,23 +6,22 @@
 
 body {
     margin: 0;
-    font-family: "Roboto Serif", Georgia, serif;
-    font-weight: 300;
-    color: #0f172a;
-    background: #ffffff;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 400;
+    color: #2C3E50;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "Comfortaa", "Segoe UI", sans-serif;
-    font-weight: 400;
+    font-family: "Comfortaa", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
 }
 
 .sticky-page-menu {
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.96);
-    border-bottom: 1px solid #e2e8f0;
+    background: #59CAE3;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(8px);
 }
 
@@ -81,7 +80,7 @@ h1, h2, h3, h4, h5, h6 {
     color: #1e293b;
     text-decoration: none;
     font-weight: 700;
-    background: #ffffff;
+    background: var(--color-surface);
     box-shadow: none;
     min-height: 42px;
     line-height: 1;
@@ -130,7 +129,7 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     padding: 9.9px 16px;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid #dbe1ea;
     color: #1e293b;
     text-decoration: none;
@@ -154,11 +153,12 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid #e2e8f0;
     box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
     backdrop-filter: blur(8px);
+    min-height: calc(100vh - 90px);
 }
 
 .finanzas-container h1 {
     margin: 0 0 18px;
-    color: #0b1739;
+    color: #3540E9;
     font-size: clamp(1.8rem, 3vw, 2.5rem);
 }
 
@@ -198,7 +198,7 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid #dbe1ea;
     border-radius: 16px;
     padding: 16px;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 .summary-card h2 {
@@ -219,7 +219,7 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid #dbe1ea;
     border-radius: 16px;
     padding: 14px;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 .form-group {
@@ -243,7 +243,7 @@ table input[type="number"] {
     padding: 10px 12px;
     outline: none;
     color: #0f172a;
-    background: #ffffff;
+    background: var(--color-surface);
     transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
@@ -257,29 +257,29 @@ table input[type="number"]:focus {
 
 .btn,
 button {
-    border: 1px solid #a9dcec;
+    border: 1px solid #85B4FF;
     cursor: pointer;
     border-radius: 999px;
     padding: 10px 20px;
     font-weight: 800;
-    color: #0f172a;
-    background: #BAEBFA;
-    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
+    color: #ffffff;
+    background: #3540E9;
+    box-shadow: 0 10px 20px rgba(53, 64, 233, 0.3);
     transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .btn:hover,
 button:hover {
-    background: #a9dcec;
+    background: #2A31C4;
     transform: translateY(-1px);
-    box-shadow: 0 14px 24px rgba(169, 220, 236, 0.72);
+    box-shadow: 0 14px 24px rgba(53, 64, 233, 0.5);
 }
 
 .chart-list {
     margin-bottom: 18px;
     padding: 12px;
     border-radius: 16px;
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid #dbe1ea;
 }
 
@@ -323,7 +323,7 @@ table {
     overflow: hidden;
     border-radius: 14px;
     border: 1px solid #e2e8f0;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 th,
@@ -362,7 +362,7 @@ a:hover {
 }
 
 .category-card {
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid #dbe1ea;
     border-radius: 12px;
     overflow: hidden;
@@ -420,7 +420,7 @@ a:hover {
     border: 1px solid #cbd5e1;
     border-radius: 10px;
     padding: 10px 36px 10px 12px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(180deg, var(--color-surface) 0%, #f8fafc 100%);
     color: #0f172a;
     font-weight: 600;
     outline: none;
@@ -448,7 +448,7 @@ a:hover {
     max-width: 100%;
     border: 1px solid #dbe1ea;
     border-radius: 10px;
-    background: #ffffff;
+    background: var(--color-surface);
 }
 
 .transactions-list {
@@ -462,7 +462,7 @@ a:hover {
 
 .transaction-item {
     display: table-row;
-    background: #ffffff;
+    background: var(--color-surface);
     font-size: 0.9rem;
 }
 
@@ -530,10 +530,27 @@ a:hover {
     text-align: right;
 }
 
+/* ============================================
+   TABLET & MOBILE RESPONSIVE
+   ============================================ */
+
 @media (max-width: 800px) {
+    .sticky-page-menu {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: rgba(252, 252, 248, 0.98);
+        border-bottom: 1px solid var(--color-border);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
     .sticky-page-menu-inner {
         width: 90%;
-        gap: 10px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 10px 0;
+        gap: 8px;
     }
 
     .sticky-links ul {
@@ -543,13 +560,14 @@ a:hover {
     .sticky-links {
         margin-left: 0;
         width: 100%;
+        flex-wrap: wrap;
     }
 
     .finanzas-container {
         width: 90%;
         margin: 18px auto;
-        padding: 18px;
-        border-radius: 16px;
+        padding: 16px;
+        border-radius: 12px;
     }
 
     .chart-row {
@@ -581,5 +599,75 @@ a:hover {
     .category-selector-row {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE (480px down)
+   ============================================ */
+
+@media (max-width: 480px) {
+    .sticky-page-menu {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        border-bottom: none;
+        border-top: 1px solid var(--color-border);
+        z-index: 1000;
+    }
+
+    .sticky-page-menu-inner {
+        width: 100%;
+        padding: 8px;
+        gap: 6px;
+        max-width: none;
+    }
+
+    body {
+        padding-bottom: 60px;
+    }
+
+    .finanzas-container {
+        width: 100%;
+        margin: 12px 0;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .card {
+        margin-bottom: 8px;
+    }
+
+    .stat-box {
+        padding: 12px 8px;
+    }
+
+    .transaction-item {
+        grid-template-columns: 60px 1fr 50px;
+        font-size: 0.75rem;
+    }
+
+    .transaction-item > span {
+        font-size: 0.75rem;
+    }
+
+    .chart-label {
+        font-size: 0.8rem;
+    }
+
+    .panel-form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .category-selector-row {
+        flex-direction: column;
+        gap: 8px;
     }
 }

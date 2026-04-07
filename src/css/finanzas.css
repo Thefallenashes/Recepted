@@ -1,21 +1,5 @@
 @import url('./components.css');
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-weight: 400;
-    color: #2C3E50;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: "Comfortaa", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-    font-weight: 600;
-}
-
 .sticky-page-menu {
     position: sticky;
     top: 0;

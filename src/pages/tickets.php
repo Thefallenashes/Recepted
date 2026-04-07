@@ -1,13 +1,7 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 $mensaje = '';
 $tipo = '';
@@ -30,7 +24,7 @@ try {
             } else {
                 $stmt = $pdo->prepare('INSERT INTO support_tickets (created_by, title, description, priority, status) VALUES (:created_by, :title, :description, :priority, :status)');
                 $stmt->execute([
-                    'created_by' => $_SESSION['usuario_id'],
+                    'created_by' => $userId,
                     'title' => $title,
                     'description' => $description,
                     'priority' => $priority,

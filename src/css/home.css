@@ -60,6 +60,7 @@
 .sticky-home-menu {
     position: sticky;
     top: 0;
+    width: 100%;
     z-index: 999;
     background: #59CAE3;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -190,7 +191,7 @@
         margin: 16px auto;
         min-height: calc(100vh - 75px);
     }
-
+    
     .sticky-home-menu-inner {
         width: 95%;
         padding: 10px 0;

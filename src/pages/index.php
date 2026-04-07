@@ -1,15 +1,7 @@
 ﻿<?php
-session_start();
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/../utils/query_helpers.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
-
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: landing.php');
-    exit();
-}
+$userId = require_authenticated_user('landing.php');
 
 $mensaje_debug = '';
 $mensaje_cookies = '';

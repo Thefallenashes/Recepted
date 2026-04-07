@@ -1,14 +1,7 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/../utils/query_helpers.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 // Only accessible via the button in config.php
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -29,7 +22,6 @@ $tipo = '';
 
 try {
     $pdo = getPDO();
-    $userId = (int)$_SESSION['usuario_id'];
     $usuario = fetch_user_profile_by_id($pdo, $userId);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {

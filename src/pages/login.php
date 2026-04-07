@@ -1,7 +1,5 @@
 ﻿<?php
-session_start();
-
-require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/includes/auth_bootstrap.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -36,19 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($usuario && password_verify($contraseña, $usuario['password'])) {
                 // Inicio de sesión exitoso
                 session_regenerate_id(true);
-                $rol = strtolower(trim((string)($usuario['role'] ?? 'user')));
-                if (!in_array($rol, ['user', 'admin', 'superadmin'], true)) {
-                    $rol = 'user';
-                }
-                $_SESSION['usuario_id'] = $usuario['id'];
-                $_SESSION['usuario_correo'] = $usuario['correo'];
-                $_SESSION['usuario_nombre'] = $usuario['nombre'];
-                $_SESSION['usuario_apellidos'] = $usuario['apellidos'];
-                $_SESSION['usuario_edad'] = $usuario['edad'];
-                $_SESSION['usuario_rol'] = $rol;
-                $_SESSION['is_admin'] = in_array($rol, ['admin', 'superadmin'], true);
-                $_SESSION['is_superadmin'] = ($rol === 'superadmin');
-                $_SESSION['is_guest'] = false;
+                $usuario['role'] = normalize_user_role($usuario['role'] ?? 'user');
+                hydrate_user_session($usuario);
 
                 // Crear token persistente (cookie) para recordar al usuario 3 días si pidió recordarme
                 $remember = !empty($_POST['remember']);

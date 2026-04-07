@@ -58,6 +58,45 @@ function require_min_role(string $minRole, string $redirect = 'home.php'): void
     }
 }
 
+function require_authenticated_user(string $redirect = 'login.php'): int
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (empty($_SESSION['usuario_id'])) {
+        header('Location: ' . $redirect);
+        exit();
+    }
+
+    return (int)$_SESSION['usuario_id'];
+}
+
+function attempt_remember_login(): void
+{
+    static $attempted = false;
+
+    if ($attempted) {
+        return;
+    }
+
+    $attempted = true;
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (!empty($_SESSION['usuario_id']) || empty($_COOKIE['remember']) || !function_exists('getPDO')) {
+        return;
+    }
+
+    try {
+        login_from_remember_cookie(getPDO());
+    } catch (Exception $e) {
+        // noop
+    }
+}
+
 function record_audit_log(PDO $pdo, string $action, string $level = 'info', ?string $details = null, ?int $targetUserId = null): void
 {
     try {

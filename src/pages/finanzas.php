@@ -1,13 +1,8 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
+require_once __DIR__ . '/../utils/schema.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 $mensaje = '';
 $tipo = '';
@@ -55,82 +50,7 @@ function categorize_transaction(string $description, string $type): string
 
 try {
     $pdo = getPDO();
-
-    // Asegurar tablas para funcionalidad avanzada
-    $pdo->exec("CREATE TABLE IF NOT EXISTS expense_categories (
-        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        user_id BIGINT UNSIGNED NOT NULL,
-        type ENUM('income','expense') NOT NULL DEFAULT 'expense',
-        name VARCHAR(80) NOT NULL,
-        color VARCHAR(7) NOT NULL DEFAULT '#4CAF50',
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        INDEX idx_categories_user (user_id),
-        INDEX idx_categories_type (type),
-        UNIQUE KEY unique_user_category (user_id, type, name)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS transactions (
-        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        user_id BIGINT UNSIGNED NOT NULL,
-        type ENUM('income','expense') NOT NULL,
-        amount DECIMAL(14,2) NOT NULL,
-        category VARCHAR(80) NOT NULL,
-        category_id BIGINT UNSIGNED NULL,
-        description VARCHAR(255) NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        INDEX idx_transactions_user (user_id),
-        INDEX idx_transactions_category (category),
-        INDEX idx_transactions_category_id (category_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // Agregar columna category_id si no existe
-    $checkColumn = $pdo->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='transactions' AND COLUMN_NAME='category_id'");
-    if ($checkColumn->rowCount() === 0) {
-        try {
-            $pdo->exec("ALTER TABLE transactions ADD COLUMN category_id BIGINT UNSIGNED NULL AFTER category");
-            $pdo->exec("ALTER TABLE transactions ADD INDEX idx_transactions_category_id (category_id)");
-        } catch (PDOException $e) {
-            // Columna ya existe
-        }
-    }
-
-    // Asegurar columna type en categorías para separar gastos/ingresos
-    $checkCategoryType = $pdo->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='expense_categories' AND COLUMN_NAME='type'");
-    if ($checkCategoryType->rowCount() === 0) {
-        try {
-            $pdo->exec("ALTER TABLE expense_categories ADD COLUMN type ENUM('income','expense') NOT NULL DEFAULT 'expense' AFTER user_id");
-        } catch (PDOException $e) {
-            // Columna ya existe o no se pudo modificar en este momento
-        }
-    }
-
-    // Intentar actualizar índice único para permitir mismo nombre en tipos distintos
-    try {
-        $pdo->exec("ALTER TABLE expense_categories DROP INDEX unique_user_category");
-    } catch (PDOException $e) {
-        // Índice no existente o ya actualizado
-    }
-    try {
-        $pdo->exec("ALTER TABLE expense_categories ADD UNIQUE KEY unique_user_category (user_id, type, name)");
-    } catch (PDOException $e) {
-        // Índice ya existe o no se pudo crear
-    }
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS savings_goals (
-        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        user_id BIGINT UNSIGNED NOT NULL,
-        name VARCHAR(120) NOT NULL,
-        target_amount DECIMAL(14,2) NOT NULL,
-        current_amount DECIMAL(14,2) NOT NULL DEFAULT 0.00,
-        target_date DATE NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        INDEX idx_goals_user (user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    $userId = (int)$_SESSION['usuario_id'];
+    assert_finanzas_schema($pdo);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
@@ -464,7 +384,7 @@ try {
     $stmt = $pdo->prepare('SELECT id, name, target_amount, current_amount, target_date FROM savings_goals WHERE user_id = :user_id ORDER BY created_at DESC');
     $stmt->execute(['user_id' => $userId]);
     $goals = $stmt->fetchAll();
-} catch (PDOException $e) {
+} catch (Exception $e) {
     error_log('Error finanzas: ' . $e->getMessage());
     $tipo = 'error';
     $mensaje = 'No se pudo procesar la información financiera avanzada.';

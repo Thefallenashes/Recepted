@@ -1,18 +1,11 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/../utils/query_helpers.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 try {
     $pdo = getPDO();
-    $uploads = fetch_uploads_visible_for_user($pdo, (int)$_SESSION['usuario_id']);
+    $uploads = fetch_uploads_visible_for_user($pdo, $userId);
 } catch (PDOException $e) {
     error_log('Error fetching uploads: ' . $e->getMessage());
     $uploads = [];

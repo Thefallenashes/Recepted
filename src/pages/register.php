@@ -1,7 +1,5 @@
 ﻿<?php
-session_start();
-
-require_once __DIR__ . '/../utils/db.php';
+require_once __DIR__ . '/includes/auth_bootstrap.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -91,15 +89,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Iniciar sesión automáticamente y crear cookie persistente
                 session_regenerate_id(true);
-                $_SESSION['usuario_id'] = $user_id;
-                $_SESSION['usuario_correo'] = $correo;
-                $_SESSION['usuario_nombre'] = $nombre;
-                $_SESSION['usuario_apellidos'] = $apellidos;
-                $_SESSION['usuario_edad'] = $edad;
-                $_SESSION['usuario_rol'] = 'user';
-                $_SESSION['is_admin'] = false;
-                $_SESSION['is_superadmin'] = false;
-                $_SESSION['is_guest'] = false;
+                hydrate_user_session([
+                    'id' => (int)$user_id,
+                    'correo' => $correo,
+                    'nombre' => $nombre,
+                    'apellidos' => $apellidos,
+                    'edad' => $edad,
+                    'role' => 'user',
+                ]);
 
                 // Crear cookie persistente si el usuario marca 'recordarme' al registrarse
                 $remember = !empty($_POST['remember']);

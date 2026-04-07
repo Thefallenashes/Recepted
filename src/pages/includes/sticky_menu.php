@@ -66,7 +66,7 @@ if (!function_exists('render_sticky_menu')) {
             ];
         }
         ?>
-        <header class="<?php echo htmlspecialchars($containerClass, ENT_QUOTES, 'UTF-8'); ?> is-collapsed" data-sticky-menu data-icon-collapsed="<?php echo htmlspecialchars($collapsedIcon, ENT_QUOTES, 'UTF-8'); ?>" data-icon-expanded="<?php echo htmlspecialchars($expandedIcon, ENT_QUOTES, 'UTF-8'); ?>">
+        <header class="<?php echo htmlspecialchars($containerClass, ENT_QUOTES, 'UTF-8'); ?>" data-sticky-menu data-icon-collapsed="<?php echo htmlspecialchars($collapsedIcon, ENT_QUOTES, 'UTF-8'); ?>" data-icon-expanded="<?php echo htmlspecialchars($expandedIcon, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="<?php echo htmlspecialchars($innerClass, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php if ($showHome): ?>
                     <a class="menu-icon-btn" href="<?php echo htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Inicio">
@@ -75,8 +75,8 @@ if (!function_exists('render_sticky_menu')) {
                     </a>
                 <?php endif; ?>
 
-                <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="false">
-                    <img src="<?php echo htmlspecialchars($collapsedIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" class="menu-toggle-icon" data-menu-toggle-icon>
+                <button type="button" class="menu-icon-btn menu-toggle-btn" data-menu-toggle aria-label="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="true">
+                    <img src="<?php echo htmlspecialchars($expandedIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($toggleLabel, ENT_QUOTES, 'UTF-8'); ?>" class="menu-toggle-icon" data-menu-toggle-icon>
                 </button>
 
                 <?php if (!empty($filteredItems)): ?>

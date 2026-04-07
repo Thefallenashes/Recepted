@@ -37,17 +37,5 @@ function getPDO(): PDO
         exit;
     }
 }
-// Intento de auto-login mediante cookie "remember"
-try {
-    $pdo_for_autologin = getPDO();
-    $auth_file = __DIR__ . '/auth.php';
-    if (file_exists($auth_file)) {
-        require_once $auth_file;
-        // No evitar errores si algo falla en el proceso
-        login_from_remember_cookie($pdo_for_autologin);
-    }
-} catch (Exception $e) {
-    // noop: si hay problemas con la base de datos, no interfiere con la página pública
-}
 
 ?>

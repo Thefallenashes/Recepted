@@ -12,7 +12,10 @@ select,
 textarea {
     font-size: 16px !important;
 }
-
+html, body {
+    margin: 0;
+    padding: 0;
+}
 /* Touch-friendly tap targets (minimum 44x44px recommended) */
 button,
 a,

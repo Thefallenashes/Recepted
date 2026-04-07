@@ -1,19 +1,12 @@
 <?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 $allowedExts = ['csv', 'xlsb', 'xltx', 'xls', 'xlsm', 'xlsx'];
 
 try {
     $pdo    = getPDO();
-    $userId = (int) $_SESSION['usuario_id'];
 
     $isAdmin = function_exists('can_manage_all_resources') && can_manage_all_resources();
     if ($isAdmin) {

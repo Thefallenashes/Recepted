@@ -1,11 +1,6 @@
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
-require_once __DIR__ . '/../../utils/db.php';
-require_once __DIR__ . '/../../utils/auth.php';
+require_once __DIR__ . '/../includes/auth_bootstrap.php';
 
 /**
  * Exige sesión autenticada para scripts y devuelve el user_id actual.
@@ -21,8 +16,7 @@ function require_script_user(string $mode = 'redirect', string $redirectTo = '..
         exit('Acceso denegado.');
     }
 
-    header('Location: ' . $redirectTo);
-    exit();
+    return require_authenticated_user($redirectTo);
 }
 
 /**

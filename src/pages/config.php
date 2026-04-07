@@ -1,15 +1,8 @@
 ﻿<?php
-session_start();
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/../utils/query_helpers.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
 // For now basic config page with session check
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 // Generate one-time access token for perfil.php and clear any active perfil session
 $perfil_token = bin2hex(random_bytes(16));
@@ -24,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $currency = trim($_POST['currency'] ?? 'EUR');
     try {
         $pdo = getPDO();
-        update_user_currency($pdo, (int)$_SESSION['usuario_id'], $currency);
+        update_user_currency($pdo, $userId, $currency);
         $tipo = 'exito';
         $mensaje = 'Configuración guardada.';
     } catch (PDOException $e) {
@@ -37,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Obtener configuración actual
 try {
     $pdo = getPDO();
-    $current_currency = fetch_user_currency($pdo, (int)$_SESSION['usuario_id'], 'EUR');
+    $current_currency = fetch_user_currency($pdo, $userId, 'EUR');
 } catch (PDOException $e) {
     $current_currency = 'EUR';
 }
@@ -69,7 +62,6 @@ try {
     ?>
 
     <div class="config-container">
-        <h1>Configuración</h1>
         <?php if ($mensaje): ?>
             <div class="mensaje <?php echo $tipo; ?>"><?php echo $mensaje; ?></div>
         <?php endif; ?>

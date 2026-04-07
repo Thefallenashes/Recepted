@@ -53,8 +53,9 @@ h1, h2, h3, h4, h5, h6 {
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(252, 252, 248, 0.96);
+    background: #59CAE3;
     border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(8px);
 }
 

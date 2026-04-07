@@ -1,10 +1,5 @@
 ﻿<?php
-session_start();
-
-require_once __DIR__ . '/../utils/db.php';
-require_once __DIR__ . '/../utils/auth.php';
-require_once __DIR__ . '/../utils/query_helpers.php';
-require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/includes/page_bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
     try {
@@ -23,16 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
 }
 
 // Verificar si el usuario está autenticado
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$userId = require_authenticated_user('login.php');
 
 // Obtener información del usuario desde la base de datos
 try {
     $pdo = getPDO();
 
-    $userId = (int)$_SESSION['usuario_id'];
     $usuario = fetch_user_by_id($pdo, $userId);
     $finanzas = fetch_user_finanzas($pdo, $userId);
     $recent_transactions = fetch_recent_user_transactions($pdo, $userId, 5);

@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
                                 $fileExt   = strtolower(pathinfo($up['filename'], PATHINFO_EXTENSION));
                                 if (in_array($fileExt, $excelExts, true)):
                                 ?>
-                                | <a href="analizar_excel.php?id=<?php echo $up['id']; ?>">Analizar</a>
+                                | <a href="finanzas.php">Analizar</a>
                                 <?php endif; ?>
                                 |
                                 <form method="POST" action="scripts/delete_upload.php" style="display:inline" class="delete-upload-form" data-filename="<?php echo htmlspecialchars($up['filename'], ENT_QUOTES, 'UTF-8'); ?>">

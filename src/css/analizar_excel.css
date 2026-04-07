@@ -77,28 +77,34 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 18px;
+    margin-top: 16px;
+    margin-bottom: 4px;
 }
 
 .ae-type-btn {
     padding: 7px 18px;
     border-radius: 999px;
-    border: 1px solid #cbd5e1;
-    background: var(--color-surface);
+    border: 1px solid #85B4FF;
+    background: #3540E9;
+    color: #ffffff;
+    font-weight: 800;
     cursor: pointer;
     font-family: inherit;
     font-size: 0.875rem;
-    transition: background 0.14s, color 0.14s, border-color 0.14s;
+    box-shadow: 0 10px 20px rgba(53, 64, 233, 0.3);
+    transition: background 0.14s, box-shadow 0.14s, transform 0.14s;
 }
 
 .ae-type-btn.active {
-    background: #0f172a;
-    color: #ffffff;
-    border-color: #0f172a;
+    background: #1e2690;
+    border-color: #3540E9;
+    box-shadow: 0 4px 10px rgba(53, 64, 233, 0.5);
 }
 
 .ae-type-btn:hover:not(.active) {
-    background: #f1f5f9;
+    background: #2A31C4;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(53, 64, 233, 0.5);
 }
 
 .ae-totals {
@@ -158,10 +164,11 @@
 
 .ae-chart-area {
     background: var(--color-surface);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 24px;
+    border: 1px solid #dbe1ea;
+    border-radius: 16px;
+    padding: 14px;
     min-height: 380px;
+    margin-top: 16px;
 }
 
 .ae-canvas-wrap {

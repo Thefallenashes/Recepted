@@ -4,6 +4,8 @@ require_once __DIR__ . '/../utils/schema.php';
 
 $userId = require_authenticated_user('login.php');
 
+$preloadId = (int)($_GET['analizar'] ?? 0);
+
 $mensaje = '';
 $tipo = '';
 
@@ -692,7 +694,7 @@ try {
                 </table>
             <?php endif; ?>
 
-            <h2 class="mt-4 mb-2">Analizar archivo Excel</h2>
+            <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo Excel</h2>
 
             <?php if (empty($excelUploads)): ?>
                 <p>No tienes archivos de Excel subidos aún.
@@ -705,7 +707,7 @@ try {
                         <select id="aeFileSelect">
                             <option value="">— Elige un archivo —</option>
                             <?php foreach ($excelUploads as $up): ?>
-                                <option value="<?php echo (int) $up['id']; ?>">
+                                <option value="<?php echo (int) $up['id']; ?>"<?php echo ($preloadId === (int)$up['id']) ? ' selected' : ''; ?>>
                                     <?php echo htmlspecialchars($up['filename']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -1401,6 +1403,15 @@ try {
         const d = document.createElement('div');
         d.textContent = String(str);
         return d.innerHTML;
+    }
+
+    // Auto-cargar si hay un archivo preseleccionado desde la URL
+    if (fileSelect.value) {
+        loadBtn.disabled = false;
+        setTimeout(() => {
+            document.getElementById('excel-analizar').scrollIntoView({ behavior: 'smooth' });
+            loadBtn.click();
+        }, 150);
     }
 
 })();

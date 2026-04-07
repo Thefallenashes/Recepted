@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/page_bootstrap.php';
 require_once __DIR__ . '/../utils/schema.php';
 require_once __DIR__ . '/../utils/currencies.php';
+require_once __DIR__ . '/../utils/rates.php';
 
 $userId = require_authenticated_user('login.php');
 
@@ -50,6 +51,8 @@ function categorize_transaction(string $description, string $type): string
     }
     return 'otros_gastos';
 }
+
+$comparatorCurrencies = [];
 
 try {
     $pdo = getPDO();
@@ -400,6 +403,26 @@ try {
     $stmt = $pdo->prepare('SELECT id, name, target_amount, current_amount, target_date FROM savings_goals WHERE user_id = :user_id ORDER BY created_at DESC');
     $stmt->execute(['user_id' => $userId]);
     $goals = $stmt->fetchAll();
+
+    $supportedCurrencies = get_supported_currencies();
+    $currencyCatalog = get_currency_list();
+    $currencyByCode = [];
+    foreach ($currencyCatalog as $item) {
+        $currencyByCode[$item['code']] = $item;
+    }
+    if (is_array($supportedCurrencies)) {
+        foreach ($supportedCurrencies as $code => $apiName) {
+            $meta = $currencyByCode[$code] ?? null;
+            $comparatorCurrencies[] = [
+                'code' => $code,
+                'name' => $meta['name'] ?? (is_string($apiName) ? $apiName : $code),
+                'symbol' => $meta['symbol'] ?? $code,
+            ];
+        }
+        usort($comparatorCurrencies, static function ($a, $b) {
+            return strcmp($a['code'], $b['code']);
+        });
+    }
 } catch (Exception $e) {
     error_log('Error finanzas: ' . $e->getMessage());
     $tipo = 'error';
@@ -695,6 +718,55 @@ try {
                     </tbody>
                 </table>
             <?php endif; ?>
+
+            <!-- Comparador de monedas -->
+            <h2 class="mt-4 mb-2">Comparador de monedas</h2>
+            <div class="currency-comparator-block">
+                <div class="form-group">
+                    <label for="tx-selector">Selecciona una transacción:</label>
+                    <select id="tx-selector" class="tx-selector">
+                        <option value="">— Elige una transacción —</option>
+                        <?php foreach ($transactions as $tx): ?>
+                            <option value="<?php echo (int)$tx['id']; ?>" data-amount="<?php echo htmlspecialchars($tx['amount']); ?>" data-currency="<?php echo htmlspecialchars($finanzas['currency']); ?>">
+                                <?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?> - <?php echo htmlspecialchars($tx['description'] ?? $tx['display_category']); ?> (<?php echo number_format((float)$tx['amount'], 2); ?> <?php echo htmlspecialchars($finanzas['currency']); ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="currency-comparator-info" id="comparator-info" style="display: none;">
+                    <div class="comparator-original">
+                        <p class="comparator-label">Monto original:</p>
+                        <p class="comparator-value">
+                            <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>
+                            <span id="original-amount">0.00</span>
+                            <span id="original-currency"><?php echo htmlspecialchars($finanzas['currency']); ?></span>
+                        </p>
+                    </div>
+
+                    <div class="comparator-arrow">→</div>
+
+                    <div class="comparator-target">
+                        <label for="target-currency-select">Convertir a:</label>
+                        <select id="target-currency-select" class="target-currency-select">
+                            <option value="">— Elige moneda destino —</option>
+                            <?php foreach ($comparatorCurrencies as $curr): ?>
+                                <option value="<?php echo htmlspecialchars($curr['code']); ?>"><?php echo htmlspecialchars($curr['code']); ?> - <?php echo htmlspecialchars($curr['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="comparator-result" id="comparator-result" style="display: none;">
+                        <p class="comparator-label">Equivalente en:</p>
+                        <p class="comparator-value result-value">
+                            <span id="result-symbol">€</span>
+                            <span id="result-amount">0.00</span>
+                            <span id="result-currency">EUR</span>
+                        </p>
+                        <p class="comparator-rate" id="comparator-rate"></p>
+                    </div>
+                </div>
+            </div>
 
             <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo Excel</h2>
 
@@ -1418,7 +1490,116 @@ try {
 
 })();
     </script>
+
+    <!-- Currency Comparator Script -->
+    <script>
+    (function () {
+        const txSelector = document.getElementById('tx-selector');
+        const targetCurrencySelect = document.getElementById('target-currency-select');
+        const comparatorInfo = document.getElementById('comparator-info');
+        const comparatorResult = document.getElementById('comparator-result');
+        const originalAmount = document.getElementById('original-amount');
+        const originalSymbol = document.getElementById('original-symbol');
+        const originalCurrency = document.getElementById('original-currency');
+        const resultAmount = document.getElementById('result-amount');
+        const resultSymbol = document.getElementById('result-symbol');
+        const resultCurrency = document.getElementById('result-currency');
+        const comparatorRate = document.getElementById('comparator-rate');
+
+        // Helper to get currency symbol using PHP data
+        const currencySymbols = <?php 
+            $symbolMap = [];
+            foreach (get_currency_list() as $c) {
+                $symbolMap[$c['code']] = $c['symbol'] ?: $c['code'];
+            }
+            echo json_encode($symbolMap, JSON_UNESCAPED_UNICODE);
+        ?>;
+
+        function showInfo() {
+            if (txSelector.value) {
+                comparatorInfo.style.display = 'grid';
+            } else {
+                comparatorInfo.style.display = 'none';
+                comparatorResult.style.display = 'none';
+            }
+        }
+
+        function updateDisplay() {
+            const selected = txSelector.options[txSelector.selectedIndex];
+            if (!selected || !txSelector.value) {
+                showInfo();
+                return;
+            }
+
+            const amount = parseFloat(selected.dataset.amount) || 0;
+            const currency = selected.dataset.currency || 'EUR';
+
+            originalAmount.textContent = amount.toFixed(2);
+            originalSymbol.textContent = currencySymbols[currency] || currency;
+            originalCurrency.textContent = currency;
+
+            showInfo();
+
+            // Reset target and result when transaction changes
+            targetCurrencySelect.value = '';
+            comparatorResult.style.display = 'none';
+        }
+
+        async function performConversion() {
+            if (!txSelector.value || !targetCurrencySelect.value) {
+                comparatorResult.style.display = 'none';
+                return;
+            }
+
+            const selected = txSelector.options[txSelector.selectedIndex];
+            const amount = parseFloat(selected.dataset.amount) || 0;
+            const fromCurrency = selected.dataset.currency || 'EUR';
+            const toCurrency = targetCurrencySelect.value;
+
+            if (fromCurrency === toCurrency) {
+                resultAmount.textContent = amount.toFixed(2);
+                resultSymbol.textContent = currencySymbols[toCurrency] || toCurrency;
+                resultCurrency.textContent = toCurrency;
+                comparatorRate.textContent = 'Tasa: 1:1 (misma moneda)';
+                comparatorResult.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('scripts/convert_currency.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        amount: amount,
+                        from: fromCurrency,
+                        to: toCurrency
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultAmount.textContent = parseFloat(data.converted).toFixed(2);
+                    resultSymbol.textContent = currencySymbols[toCurrency] || toCurrency;
+                    resultCurrency.textContent = toCurrency;
+                    comparatorRate.textContent = `Tasa: 1 ${fromCurrency} = ${(data.rate).toFixed(4)} ${toCurrency}`;
+                    comparatorResult.style.display = 'block';
+                } else {
+                    comparatorResult.style.display = 'none';
+                    alert('Error en la conversión: ' + (data.error || 'Desconocido'));
+                }
+            } catch (error) {
+                comparatorResult.style.display = 'none';
+                console.error('Conversion error:', error);
+            }
+        }
+
+        txSelector.addEventListener('change', updateDisplay);
+        targetCurrencySelect.addEventListener('change', performConversion);
+
+        // Init
+        showInfo();
+    })();
+    </script>
 </body>
 </html>
-
-

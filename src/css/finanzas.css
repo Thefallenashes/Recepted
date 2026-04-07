@@ -222,7 +222,7 @@
 .form-group select,
 .form-group textarea,
 table input[type="number"] {
-    width: 100%;
+    width: 50%;
     border: 1px solid #cbd5e1;
     border-radius: 10px;
     padding: 10px 12px;
@@ -654,5 +654,178 @@ a:hover {
     .category-selector-row {
         flex-direction: column;
         gap: 8px;
+    }
+}
+
+/* ════════════════════════════════════════════════════════
+   CURRENCY COMPARATOR
+   ════════════════════════════════════════════════════════ */
+
+.currency-comparator-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.tx-selector {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.tx-selector:hover {
+    border-color: #0ea5a8;
+}
+
+.tx-selector:focus {
+    border-color: #0ea5a8;
+    box-shadow: 0 0 0 3px rgba(14, 165, 168, 0.18);
+}
+
+.currency-comparator-info {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+    margin-top: 16px;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.comparator-original,
+.comparator-target {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comparator-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0;
+}
+
+.comparator-value {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0b1739;
+    margin: 0;
+}
+
+.comparator-value span:first-child {
+    color: #0ea5a8;
+    font-size: 1.6rem;
+    min-width: 24px;
+}
+
+.comparator-value span:last-child {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.target-currency-select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.target-currency-select:hover {
+    border-color: #0ea5a8;
+}
+
+.target-currency-select:focus {
+    border-color: #0ea5a8;
+    box-shadow: 0 0 0 3px rgba(14, 165, 168, 0.18);
+}
+
+.comparator-arrow {
+    font-size: 1.8rem;
+    color: #0ea5a8;
+    font-weight: bold;
+    text-align: center;
+}
+
+.comparator-result {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: #f0fdfd;
+    border: 1px solid #a5e2e8;
+    border-radius: 8px;
+}
+
+.result-value {
+    font-size: 1.3rem;
+    color: #059669;
+}
+
+.comparator-rate {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+@media (max-width: 900px) {
+    .currency-comparator-info {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .comparator-arrow {
+        transform: rotate(90deg);
+    }
+
+    .comparator-target {
+        order: 3;
+    }
+
+    .comparator-result {
+        order: 4;
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .currency-comparator-block {
+        padding: 14px;
+    }
+
+    .comparator-value {
+        font-size: 1.2rem;
+    }
+
+    .comparator-value span:first-child {
+        font-size: 1.4rem;
+    }
+
+    .comparator-rate {
+        font-size: 0.75rem;
     }
 }

@@ -1,5 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/includes/page_bootstrap.php';
+require_once __DIR__ . '/../utils/currencies.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
     try {
@@ -109,7 +110,7 @@ try {
                                             <td><?php echo $tx['type'] === 'income' ? 'Ingreso' : 'Gasto'; ?></td>
                                             <td><?php echo htmlspecialchars($tx['category']); ?></td>
                                             <td><?php echo htmlspecialchars($tx['description'] ?? '—'); ?></td>
-                                            <td class="tx-amount"><?php echo ($tx['type'] === 'income' ? '+' : '-') . number_format($tx['amount'], 2); ?> <?php echo $finanzas ? htmlspecialchars($finanzas['currency']) : ''; ?></td>
+                                            <td class="tx-amount"><?php echo ($tx['type'] === 'income' ? '+' : '-') . number_format($tx['amount'], 2); ?> <?php echo $finanzas ? htmlspecialchars(get_currency_symbol($finanzas['currency'])) : ''; ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

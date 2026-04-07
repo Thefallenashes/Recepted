@@ -1,6 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/includes/page_bootstrap.php';
 require_once __DIR__ . '/../utils/schema.php';
+require_once __DIR__ . '/../utils/currencies.php';
 
 $userId = require_authenticated_user('login.php');
 
@@ -464,19 +465,20 @@ try {
 
         <?php if ($finanzas): ?>
             <div class="grid grid-cols-3">
+                <?php $cur_symbol = get_currency_symbol($finanzas['currency'] ?? 'EUR'); ?>
                 <div class="stat-box primary">
                     <div class="stat-label">Balance</div>
-                    <p class="stat-value"><?php echo number_format((float)$finanzas['balance'], 2); ?></p>
+                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['balance'], 2); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
                 <div class="stat-box success">
                     <div class="stat-label">Ingresos</div>
-                    <p class="stat-value"><?php echo number_format((float)$finanzas['income'], 2); ?></p>
+                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['income'], 2); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
                 <div class="stat-box danger">
                     <div class="stat-label">Gastos</div>
-                    <p class="stat-value"><?php echo number_format((float)$finanzas['expenses'], 2); ?></p>
+                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['expenses'], 2); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
             </div>

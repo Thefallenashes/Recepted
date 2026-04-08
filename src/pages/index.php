@@ -51,9 +51,13 @@ $debug_activo = !empty($_SESSION['debug_mode']) || !empty($_SESSION['is_superadm
 $paginas_debug = [];
 if ($debug_activo) {
     $archivos = glob(__DIR__ . '/*.php');
+    $paginas_excluidas = ['index.php', 'landing.php', 'login.php', 'perfil.php', 'register.php'];
     if (is_array($archivos)) {
         foreach ($archivos as $archivo) {
             $nombre = basename($archivo);
+            if (in_array($nombre, $paginas_excluidas, true)) {
+                continue;
+            }
             $requiere_parametro = in_array($nombre, ['download.php', 'delete_upload.php'], true);
             $paginas_debug[] = [
                 'nombre' => $nombre,

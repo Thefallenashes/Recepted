@@ -45,11 +45,12 @@
 .sticky-home-menu-inner {
     width: 80%;
     margin: 0 auto;
-    padding: 15.4px 0;
+    padding: 12px 0;
+    min-height: 64px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .menu-toggle-btn {
@@ -58,7 +59,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 12px;
+    padding: 8px;
+    min-width: 42px;
+    min-height: 42px;
     border: 1px solid #dbe1ea;
     border-radius: 999px;
     background: var(--color-surface);
@@ -126,15 +129,6 @@
     color: #0b8f97;
     border-color: #99f6e4;
     box-shadow: none;
-}
-
-[data-sticky-menu].is-collapsed .sticky-links,
-[data-sticky-menu].is-collapsed .menu-icon-btn.logout-btn {
-    display: none;
-}
-
-[data-sticky-menu].is-collapsed .menu-icon-btn[aria-label="Inicio"] {
-    display: none;
 }
 
 .sticky-links ul {
@@ -376,6 +370,7 @@ li {
 
     .sticky-home-menu-inner {
         width: 90%;
+        min-height: 60px;
         gap: 10px;
     }
 

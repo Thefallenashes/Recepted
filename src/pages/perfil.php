@@ -72,7 +72,7 @@ try {
     render_sticky_menu([
         'container_class' => 'sticky-page-menu',
         'inner_class' => 'sticky-page-menu-inner',
-        'home_href' => 'home.php',
+        'home_href' => 'landing.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],

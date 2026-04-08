@@ -87,7 +87,7 @@ try {
     <?php
     $landingNavItems = [];
     if ($cookie_activa || isset($_SESSION['usuario_id'])) {
-        $landingNavItems[] = ['href' => 'home.php', 'label' => 'Ir al inicio'];
+        $landingNavItems[] = ['href' => 'home.php', 'label' => 'Panel de control'];
     } else {
         $landingNavItems[] = ['href' => 'login.php', 'label' => 'Iniciar sesión'];
         $landingNavItems[] = ['href' => 'register.php', 'label' => 'Registrarse'];

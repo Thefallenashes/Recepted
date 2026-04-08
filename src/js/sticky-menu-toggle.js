@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var DURATION = 300;
-    var TRANS = 'max-height ' + DURATION + 'ms ease, opacity ' + DURATION + 'ms ease, transform ' + DURATION + 'ms ease';
-
+    var DURATION = 220;
+    var EASING = 'ease';
     var menus = document.querySelectorAll('[data-sticky-menu]');
 
     menus.forEach(function (menu) {
@@ -22,9 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var collapsedIcon = menu.getAttribute('data-icon-collapsed') || '../images/MostrarMenuDesplegable.PNG';
         var expandedIcon = menu.getAttribute('data-icon-expanded') || '../images/OcultarMenuDesplegable.PNG';
-        var animatedItems = [stickyLinks, homeBtn, logoutBtn].filter(Boolean);
-        var isAnimating = false;
+        var collapsibleItems = [stickyLinks, homeBtn, logoutBtn].filter(Boolean);
         var cleanupFns = [];
+        var isAnimating = false;
 
         function on(el, evt, handler) {
             el.addEventListener(evt, handler);
@@ -46,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        function clearSlideStyles(el) {
+        function clearStyles(el) {
             el.style.transition = '';
             el.style.overflow = '';
             el.style.maxHeight = '';
@@ -54,93 +53,125 @@ document.addEventListener('DOMContentLoaded', function () {
             el.style.transform = '';
         }
 
-        function slideIn(el) {
-            return new Promise(function (resolve) {
-                if (el._slideTimer) {
-                    clearTimeout(el._slideTimer);
-                }
-
-                //Hace el elemento visible
-                el.hidden = false;
-
-                // Fuerza a que comienze colapsado
-                el.style.transition = 'none';
-                el.style.overflow = 'hidden';
-                el.style.maxHeight = '0px';
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(-10px)';
-                void el.offsetHeight;
-                // Comprobar tamaño del contenido
-                var targetH = el.scrollHeight;
-
-                // Inicia la animacion
-                el.style.transition = TRANS;
-                el.style.maxHeight = targetH + 'px';
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
-
-                var done = false;
-                function finish() {
-                    if (done) return;
-                    done = true;
-                    clearTimeout(el._slideTimer);
-                    clearSlideStyles(el);
-                    resolve();
-                }
-
-                function handler(e) {
-                    if (e.target !== el || e.propertyName !== 'opacity') return;
-                    el.removeEventListener('transitionend', handler);
-                    finish();
-                }
-                el.addEventListener('transitionend', handler);
-                el._slideTimer = setTimeout(finish, DURATION + 60);
-            });
-        }
-
-        function slideOut(el) {
+        function animateOut(el) {
             return new Promise(function (resolve) {
                 if (el.hidden) {
                     resolve();
                     return;
                 }
 
-                if (el._slideTimer) {
-                    clearTimeout(el._slideTimer);
+                if (el === stickyLinks) {
+                    var currentH = el.scrollHeight;
+                    el.style.overflow = 'hidden';
+                    el.style.maxHeight = currentH + 'px';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                    void el.offsetHeight;
+                    el.style.transition = 'max-height ' + DURATION + 'ms ' + EASING + ', opacity ' + DURATION + 'ms ' + EASING + ', transform ' + DURATION + 'ms ' + EASING;
+                    el.style.maxHeight = '0px';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                } else {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                    void el.offsetHeight;
+                    el.style.transition = 'opacity ' + DURATION + 'ms ' + EASING + ', transform ' + DURATION + 'ms ' + EASING;
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
                 }
 
-                //Bloquea la altura actual del menu
-                var currentH = el.scrollHeight;
-                el.style.transition = 'none';
-                el.style.overflow = 'hidden';
-                el.style.maxHeight = currentH + 'px';
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
-                void el.offsetHeight;
-                // Animacion para el cierre
-                el.style.transition = TRANS;
-                el.style.maxHeight = '0px';
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(-10px)';
-
                 var done = false;
+                var timer = setTimeout(finish, DURATION + 50);
+
                 function finish() {
-                    if (done) return;
+                    if (done) {
+                        return;
+                    }
                     done = true;
-                    clearTimeout(el._slideTimer);
+                    clearTimeout(timer);
+                    el.removeEventListener('transitionend', onEnd);
                     el.hidden = true;
-                    clearSlideStyles(el);
+                    clearStyles(el);
                     resolve();
                 }
 
-                function handler(e) {
-                    if (e.target !== el || e.propertyName !== 'opacity') return;
-                    el.removeEventListener('transitionend', handler);
+                function onEnd(e) {
+                    if (e.target !== el) {
+                        return;
+                    }
                     finish();
                 }
-                el.addEventListener('transitionend', handler);
-                el._slideTimer = setTimeout(finish, DURATION + 60);
+
+                el.addEventListener('transitionend', onEnd);
             });
+        }
+
+        function animateIn(el) {
+            return new Promise(function (resolve) {
+                el.hidden = false;
+
+                if (el === stickyLinks) {
+                    el.style.overflow = 'hidden';
+                    el.style.maxHeight = '0px';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                    void el.offsetHeight;
+                    var targetH = el.scrollHeight;
+                    el.style.transition = 'max-height ' + DURATION + 'ms ' + EASING + ', opacity ' + DURATION + 'ms ' + EASING + ', transform ' + DURATION + 'ms ' + EASING;
+                    el.style.maxHeight = targetH + 'px';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                } else {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                    void el.offsetHeight;
+                    el.style.transition = 'opacity ' + DURATION + 'ms ' + EASING + ', transform ' + DURATION + 'ms ' + EASING;
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+
+                var done = false;
+                var timer = setTimeout(finish, DURATION + 50);
+
+                function finish() {
+                    if (done) {
+                        return;
+                    }
+                    done = true;
+                    clearTimeout(timer);
+                    el.removeEventListener('transitionend', onEnd);
+                    clearStyles(el);
+                    resolve();
+                }
+
+                function onEnd(e) {
+                    if (e.target !== el) {
+                        return;
+                    }
+                    finish();
+                }
+
+                el.addEventListener('transitionend', onEnd);
+            });
+        }
+
+        function setCollapsed(collapsed, animate) {
+            menu.classList.toggle('is-collapsed', collapsed);
+            syncIcons(collapsed);
+
+            if (!animate) {
+                collapsibleItems.forEach(function (item) {
+                    item.hidden = collapsed;
+                    clearStyles(item);
+                });
+                return Promise.resolve();
+            }
+
+            if (collapsed) {
+                return Promise.all(collapsibleItems.map(animateOut));
+            }
+
+            return Promise.all(collapsibleItems.map(animateIn));
         }
 
         function onToggleClick() {
@@ -148,40 +179,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            var shouldCollapse = !menu.classList.contains('is-collapsed');
             isAnimating = true;
-
-            if (menu.classList.contains('is-collapsed')) {
-                // Abrur
-                menu.classList.remove('is-collapsed');
-                syncIcons(false);
-                Promise.all(animatedItems.map(slideIn)).then(function () {
-                    isAnimating = false;
-                });
-            } else {
-                // Cerrar
-                syncIcons(true);
-                Promise.all(animatedItems.map(slideOut)).then(function () {
-                    menu.classList.add('is-collapsed');
-                    isAnimating = false;
-                });
-            }
+            setCollapsed(shouldCollapse, true).finally(function () {
+                isAnimating = false;
+            });
         }
+
         on(toggleBtn, 'click', onToggleClick);
 
-        // Set initial state
-        var startCollapsed = menu.classList.contains('is-collapsed');
-        animatedItems.forEach(function (item) {
-            item.hidden = startCollapsed;
-        });
-        syncIcons(startCollapsed);
+        setCollapsed(menu.classList.contains('is-collapsed'), false);
 
         on(window, 'pagehide', function () {
-            animatedItems.forEach(function (el) {
-                if (el && el._slideTimer) {
-                    clearTimeout(el._slideTimer);
-                    el._slideTimer = null;
-                }
-            });
             cleanupFns.forEach(function (fn) {
                 fn();
             });

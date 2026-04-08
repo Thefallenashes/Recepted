@@ -52,8 +52,7 @@ try {
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
         'nav_class' => 'navbar sticky-links',
-        'show_home' => false,
-        'home_href' => 'home.php',
+        'home_href' => 'landing.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],

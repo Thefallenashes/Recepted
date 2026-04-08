@@ -13,21 +13,28 @@
 .sticky-page-menu-inner {
     width: 80%;
     margin: 0 auto;
-    padding: 15.4px 0;
+    padding: 12px 0;
+    min-height: 64px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .menu-toggle-btn {
     order: 4;
     margin-left: auto;
-    padding: 0;
-    border: 0;
-    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    min-width: 42px;
+    min-height: 42px;
+    border: 1px solid #dbe1ea;
+    border-radius: 999px;
+    background: var(--color-surface);
     box-shadow: none;
-    color: transparent;
+    color: #1e293b;
 }
 
 .menu-icon-btn.logout-btn {
@@ -44,15 +51,6 @@
     height: 24px;
     object-fit: contain;
     display: inline-block;
-}
-
-[data-sticky-menu].is-collapsed .sticky-links,
-[data-sticky-menu].is-collapsed .menu-icon-btn.logout-btn {
-    display: none;
-}
-
-[data-sticky-menu].is-collapsed .menu-icon-btn[aria-label="Inicio"] {
-    display: none;
 }
 
 .menu-icon-btn {
@@ -81,7 +79,9 @@
 
 .menu-toggle-btn:hover {
     transform: none;
-    background: transparent;
+    background: #f0fdfa;
+    color: #0b8f97;
+    border-color: #99f6e4;
     box-shadow: none;
 }
 
@@ -528,7 +528,7 @@ a:hover {
    TABLET & MOBILE RESPONSIVE
    ============================================ */
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
     .sticky-page-menu {
         position: sticky;
         top: 0;
@@ -540,11 +540,26 @@ a:hover {
     }
 
     .sticky-page-menu-inner {
-        width: 90%;
+        width: 95%;
         max-width: 1400px;
         margin: 0 auto;
         padding: 10px 0;
+        min-height: 60px;
         gap: 8px;
+    }
+
+    .menu-icon-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+    .sticky-links ul {
+        gap: 6px;
+    }
+
+    .sticky-links a {
+        padding: 6px 12px;
+        font-size: 0.85rem;
     }
 
     .sticky-links ul {
@@ -602,25 +617,43 @@ a:hover {
 
 @media (max-width: 480px) {
     .sticky-page-menu {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        border-bottom: none;
-        border-top: 1px solid var(--color-border);
+        position: sticky;
+        top: 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-top: 0;
         z-index: 1000;
     }
 
     .sticky-page-menu-inner {
-        width: 100%;
-        padding: 8px;
+        width: 95%;
+        padding: 8px 0;
+        min-height: 56px;
         gap: 6px;
-        max-width: none;
     }
 
-    body {
-        padding-bottom: 60px;
+    .menu-icon-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    .menu-icon-btn span {
+        display: none;
+    }
+
+    .sticky-links {
+        width: 100%;
+        margin: 0;
+    }
+
+    .sticky-links ul {
+        gap: 4px;
+    }
+
+    .sticky-links a {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
     }
 
     .finanzas-container {

@@ -1014,6 +1014,7 @@ try {
     let currentType    = 'bar';
     let chartInstances = [];
     let analysedData   = null;
+    let uploadId       = null;
 
     /* ============================================================
        Elementos DOM
@@ -1030,6 +1031,7 @@ try {
     ============================================================ */
     fileSelect.addEventListener('change', () => {
         loadBtn.disabled = !fileSelect.value;
+        uploadId = fileSelect.value;
     });
 
     document.querySelectorAll('.ae-type-btn').forEach(btn => {
@@ -1232,6 +1234,12 @@ try {
         multiWrap.className = isMulti ? 'ae-multi-sheet' : 'ae-single-sheet';
         chartArea.appendChild(multiWrap);
 
+        // ======= GRÁFICO CONSOLIDADO =======
+        if (isMulti || sheetsData.length > 0) {
+            renderConsolidatedChart(sheetsData, type);
+        }
+
+        // ======= GRÁFICOS POR HOJA =======
         sheetsData.forEach(data => {
             const section = document.createElement('div');
             section.className = 'ae-sheet-section';
@@ -1342,6 +1350,8 @@ try {
                         }
                     });
                 } else if (type === 'pie') {
+                    const totalG = data.gastos.reduce((a, b) => a + b, 0);
+                    const totalB = data.beneficios.reduce((a, b) => a + b, 0);
                     const total = totalG + totalB || 1;
                     ci = new Chart(ctx, {
                         type: 'pie',
@@ -1383,6 +1393,327 @@ try {
 
             multiWrap.appendChild(section);
         });
+    }
+
+    /* ============================================================
+       GRÁFICO CONSOLIDADO
+    ============================================================ */
+    function renderConsolidatedChart(sheetsData, type) {
+        // Calcular totales consolidados
+        let totalGastosConsolidado = 0;
+        let totalBeneficiosConsolidado = 0;
+
+        sheetsData.forEach(data => {
+            totalGastosConsolidado += data.gastos.reduce((a, b) => a + b, 0);
+            totalBeneficiosConsolidado += data.beneficios.reduce((a, b) => a + b, 0);
+        });
+
+        const balanceNeto = totalBeneficiosConsolidado - totalGastosConsolidado;
+        const balanceClass = balanceNeto > 0 ? 'pos' : balanceNeto < 0 ? 'neg' : 'neu';
+        const balanceLabel = balanceNeto >= 0 ? 'Ahorrado: +' : 'Pérdida: ';
+
+        // Crear contenedor del consolidado
+        const consolidadoSection = document.createElement('div');
+        consolidadoSection.className = 'ae-consolidated-section';
+        consolidadoSection.style.marginBottom = '30px';
+        consolidadoSection.style.padding = '20px';
+        consolidadoSection.style.backgroundColor = '#f9fafb';
+        consolidadoSection.style.borderRadius = '8px';
+        consolidadoSection.style.borderLeft = '4px solid #0ea5a8';
+
+        const title = document.createElement('h2');
+        title.textContent = 'Análisis Consolidado';
+        title.style.marginTop = '0';
+        title.style.marginBottom = '15px';
+        consolidadoSection.appendChild(title);
+
+        // Totales
+        const totalsEl = doc(`
+            <div class="ae-totals" style="margin-bottom: 20px;">
+                <div class="ae-total-item">
+                    <span class="ae-total-label">Gastos totales (todas las hojas)</span>
+                    <span class="ae-total-value neg">-${fmt(totalGastosConsolidado)} €</span>
+                </div>
+                <div class="ae-total-item">
+                    <span class="ae-total-label">Beneficios totales (todas las hojas)</span>
+                    <span class="ae-total-value pos">+${fmt(totalBeneficiosConsolidado)} €</span>
+                </div>
+                <div class="ae-total-item">
+                    <span class="ae-total-label">Balance Total</span>
+                    <span class="ae-total-value ${balanceClass}" style="font-size: 1.2em; font-weight: bold;">
+                        ${balanceLabel}${fmt(Math.abs(balanceNeto))} €
+                    </span>
+                </div>
+            </div>`);
+
+        consolidadoSection.appendChild(totalsEl);
+
+        // Gráfico consolidado
+        if (type !== 'text') {
+            const canvasWrap = document.createElement('div');
+            canvasWrap.className = 'ae-canvas-wrap';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'aeConsolidatedChart';
+            canvasWrap.appendChild(canvas);
+            consolidadoSection.appendChild(canvasWrap);
+
+            const ctx = canvas.getContext('2d');
+
+            const colG  = 'rgba(220,38,38,0.75)';
+            const colB  = 'rgba(22,163,74,0.75)';
+            const colGb = 'rgba(220,38,38,1)';
+            const colBb = 'rgba(22,163,74,1)';
+
+            if (type === 'bar') {
+                const ci = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total'],
+                        datasets: [
+                            { label: 'Gastos', data: [totalGastosConsolidado], backgroundColor: colG, borderColor: colGb, borderWidth: 1 },
+                            { label: 'Beneficios', data: [totalBeneficiosConsolidado], backgroundColor: colB, borderColor: colBb, borderWidth: 1 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €' } }
+                        },
+                        scales: { y: { beginAtZero: true, ticks: { callback: v => fmt(v) + ' €' } } }
+                    }
+                });
+                chartInstances.push(ci);
+            } else if (type === 'pie') {
+                const total = totalGastosConsolidado + totalBeneficiosConsolidado || 1;
+                const ci = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Gastos', 'Beneficios'],
+                        datasets: [{ data: [round2(totalGastosConsolidado), round2(totalBeneficiosConsolidado)], backgroundColor: [colG, colB], borderColor: [colGb, colBb], borderWidth: 1 }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: { label: ctx => { const pct = ((ctx.raw / total) * 100).toFixed(1); return ' ' + fmt(ctx.raw) + ' € (' + pct + '%)'; } } }
+                        }
+                    }
+                });
+                chartInstances.push(ci);
+            } else if (type === 'line') {
+                const ci = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Total'],
+                        datasets: [
+                            { label: 'Gastos', data: [totalGastosConsolidado], borderColor: colGb, backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.35, fill: true, pointRadius: 4 },
+                            { label: 'Beneficios', data: [totalBeneficiosConsolidado], borderColor: colBb, backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.35, fill: true, pointRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €' } }
+                        },
+                        scales: { y: { beginAtZero: true, ticks: { callback: v => fmt(v) + ' €' } } }
+                    }
+                });
+                chartInstances.push(ci);
+            }
+        }
+
+        // Botón guardar
+        const btnContainer = document.createElement('div');
+        btnContainer.style.marginTop = '20px';
+        btnContainer.style.textAlign = 'center';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Guardar Análisis';
+        saveBtn.className = 'btn';
+        saveBtn.style.padding = '12px 30px';
+        saveBtn.style.fontSize = '1em';
+        saveBtn.onclick = async () => {
+            await showConfirmationModal(sheetsData, totalGastosConsolidado, totalBeneficiosConsolidado, balanceNeto);
+        };
+
+        btnContainer.appendChild(saveBtn);
+        consolidadoSection.appendChild(btnContainer);
+
+        // Insertar al inicio
+        chartArea.insertBefore(consolidadoSection, chartArea.firstChild);
+    }
+
+    /* ============================================================
+       MODAL DE CONFIRMACIÓN
+    ============================================================ */
+    async function showConfirmationModal(sheetsData, totalGastos, totalBeneficios, balanceNeto) {
+        const filename = fileSelect.options[fileSelect.selectedIndex].textContent;
+        const categoryName = filename.split('.')[0];
+
+        // Crear modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+
+        const title = document.createElement('h2');
+        title.textContent = 'Confirmar Guardado de Análisis';
+        title.style.marginTop = '0';
+
+        const summary = document.createElement('div');
+        summary.style.marginBottom = '20px';
+        summary.style.padding = '15px';
+        summary.style.backgroundColor = '#f0f9ff';
+        summary.style.borderRadius = '6px';
+        summary.innerHTML = `
+            <p><strong>Archivo:</strong> ${esc(filename)}</p>
+            <p><strong>Categoría a crear:</strong> ${esc(categoryName)}</p>
+            <p><strong>Número de hojas:</strong> ${sheetsData.length}</p>
+            <p><strong>Gastos totales:</strong> <span style="color: #dc2626;">-${fmt(totalGastos)} €</span></p>
+            <p><strong>Beneficios totales:</strong> <span style="color: #16a34a;">+${fmt(totalBeneficios)} €</span></p>
+            <p style="font-weight: bold; font-size: 1.1em;">
+                <strong>Balance Total:</strong> 
+                <span style="color: ${balanceNeto > 0 ? '#16a34a' : balanceNeto < 0 ? '#dc2626' : '#666'};">
+                    ${balanceNeto >= 0 ? 'Ahorrado: +' : 'Pérdida: -'}${fmt(Math.abs(balanceNeto))} €
+                </span>
+            </p>
+        `;
+
+        const details = document.createElement('div');
+        details.style.marginBottom = '20px';
+        details.style.padding = '15px';
+        details.style.backgroundColor = '#f9fafb';
+        details.style.borderRadius = '6px';
+        details.innerHTML = `
+            <p style="margin: 0 0 10px 0;"><strong>Transacciones que se crearán:</strong></p>
+            <ul style="margin: 0; padding-left: 20px;">
+                ${sheetsData.map((sheet, i) => {
+                    const gastos = sheet.gastos.reduce((a, b) => a + b, 0);
+                    const beneficios = sheet.beneficios.reduce((a, b) => a + b, 0);
+                    const balance = beneficios - gastos;
+                    const type = balance > 0 ? 'Ingreso' : balance < 0 ? 'Gasto' : 'Neutra';
+                    return `<li>${esc(categoryName)}-${esc(sheet.sheetName)} (${type}: ${balance > 0 ? '+' : ''}${fmt(balance)} €)</li>`;
+                }).join('')}
+                <li><strong>${esc(categoryName)}-total</strong> (${balanceNeto > 0 ? 'Ingreso: +' : balanceNeto < 0 ? 'Gasto: -' : 'Neutra: '}${fmt(Math.abs(balanceNeto))} €)</li>
+            </ul>
+        `;
+
+        const warning = document.createElement('p');
+        warning.style.cssText = `
+            padding: 10px;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        `;
+        warning.innerHTML = '⚠️ <strong>Nota:</strong> Esta acción creará las transacciones y no se puede deshacer directamente desde aquí.';
+
+        const buttons = document.createElement('div');
+        buttons.style.cssText = `
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        `;
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancelar';
+        cancelBtn.className = 'btn';
+        cancelBtn.style.cssText = `
+            background: #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+        `;
+        cancelBtn.onclick = () => modal.remove();
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = 'Guardar Análisis';
+        confirmBtn.className = 'btn';
+        confirmBtn.style.cssText = `
+            background: #0ea5a8;
+            color: white;
+            cursor: pointer;
+        `;
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Guardando...';
+            await saveAnalysis(sheetsData, filename);
+            modal.remove();
+        };
+
+        buttons.appendChild(cancelBtn);
+        buttons.appendChild(confirmBtn);
+
+        content.appendChild(title);
+        content.appendChild(summary);
+        content.appendChild(details);
+        content.appendChild(warning);
+        content.appendChild(buttons);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+    }
+
+    /* ============================================================
+       GUARDAR ANÁLISIS
+    ============================================================ */
+    async function saveAnalysis(sheetsData, filename) {
+        try {
+            const payload = {
+                filename: filename,
+                sheets: sheetsData.map(sheet => ({
+                    sheetName: sheet.sheetName,
+                    gastos_total: sheet.gastos.reduce((a, b) => a + b, 0),
+                    beneficios_total: sheet.beneficios.reduce((a, b) => a + b, 0)
+                }))
+            };
+
+            const response = await fetch('scripts/save_excel_analysis.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(`✅ Análisis guardado correctamente!\n\nBalance total: ${data.totalBalance >= 0 ? '+' : ''}${fmt(data.totalBalance)} €\nTransacciones creadas: ${data.transactionsCreated.length}`);
+                
+                // Recargar la página para actualizar datos
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                alert('❌ Error al guardar: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            alert('❌ Error al guardar el análisis: ' + error.message);
+        }
     }
 
     /* ============================================================
@@ -1482,6 +1813,7 @@ try {
     // Auto-cargar si hay un archivo preseleccionado desde la URL
     if (fileSelect.value) {
         loadBtn.disabled = false;
+        uploadId = fileSelect.value;
         setTimeout(() => {
             document.getElementById('excel-analizar').scrollIntoView({ behavior: 'smooth' });
             loadBtn.click();

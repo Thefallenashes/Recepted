@@ -314,7 +314,7 @@ try {
     }
 
     // Obtener categorías personalizadas del usuario
-    $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY name ASC');
+    $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY id ASC');
     $stmt->execute(['user_id' => $userId]);
     $personalCategories = $stmt->fetchAll();
     $expenseCategories = $personalCategories;
@@ -352,7 +352,7 @@ try {
         LEFT JOIN transactions t ON ec.id = t.category_id
         WHERE ec.user_id = :user_id
            GROUP BY ec.id, ec.name
-        ORDER BY total DESC
+        ORDER BY ec.id ASC
     ");
     $stmt->execute(['user_id' => $userId]);
     $expensesByPersonalCategory = $stmt->fetchAll();
@@ -366,7 +366,7 @@ try {
                 SELECT id, type, amount, description, created_at 
                 FROM transactions 
                 WHERE category_id = :category_id
-                ORDER BY created_at DESC
+                ORDER BY created_at ASC, id ASC
             ");
             $stmt->execute(['category_id' => $catId]);
             $transactionsByCategory[$catId] = $stmt->fetchAll();
@@ -379,8 +379,7 @@ try {
         $series = [];
         $runningTotal = 0.0;
         if (!empty($transactionsByCategory[$catId])) {
-            $txAsc = array_reverse($transactionsByCategory[$catId]);
-            foreach ($txAsc as $txItem) {
+            foreach ($transactionsByCategory[$catId] as $txItem) {
                 $signedAmount = (($txItem['type'] ?? 'expense') === 'income')
                     ? (float)$txItem['amount']
                     : -(float)$txItem['amount'];
@@ -525,7 +524,9 @@ try {
                                         <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
                                     </form>
                                 </div>
-                                <canvas id="categoryLineChart" height="57"></canvas>
+                                <div id="categoryLineChartWrap" class="category-chart-wrap">
+                                    <canvas id="categoryLineChart" height="57"></canvas>
+                                </div>
                             <?php endif; ?>
                         </div>
 
@@ -734,22 +735,20 @@ try {
 
             <section class="finance-section">
                 <h2 class="mt-4 mb-2">Nueva transacción</h2>
-                <form method="POST" action="" class="panel-form section-surface">
+                <form method="POST" action="" class="panel-form section-surface multi-field-form">
                             <input type="hidden" name="action" value="add_transaction">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="amount">Importe</label>
-                                    <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="category_id">Categoría</label>
-                                    <select id="category_id" name="category_id" required>
-                                        <option value="" selected disabled hidden></option>
-                                        <?php foreach ($expenseCategories as $cat): ?>
-                                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label for="amount">Importe</label>
+                                <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="category_id">Categoría</label>
+                                <select id="category_id" name="category_id" required>
+                                    <option value="" selected disabled hidden></option>
+                                    <?php foreach ($expenseCategories as $cat): ?>
+                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="description">Descripción</label>
@@ -768,14 +767,16 @@ try {
                                     <label for="category_name">Nombre</label>
                                     <input id="category_name" name="category_name" required>
                                 </div>
-                                <button class="btn category-create-btn" type="submit">Crear</button>
+                                <div class="category-create-action">
+                                    <button class="btn category-create-btn" type="submit">Crear</button>
+                                </div>
                             </div>
                 </form>
             </section>
 
             <section class="finance-section">
                 <h2>Crear meta de ahorro</h2>
-                <form method="POST" action="" class="panel-form section-surface">
+                <form method="POST" action="" class="panel-form section-surface multi-field-form">
                             <input type="hidden" name="action" value="add_goal">
                             <div class="form-group">
                                 <label for="goal_name">Nombre de la meta</label>
@@ -824,6 +825,7 @@ try {
             const deleteHidden = document.getElementById('delete_selected_category_id');
             const deleteButton = document.getElementById('delete_selected_category_btn');
             const canvas = document.getElementById('categoryLineChart');
+            const chartWrap = document.getElementById('categoryLineChartWrap');
 
             if (!selector || !canvas) {
                 return;
@@ -845,9 +847,13 @@ try {
 
             const points = categorySeries[selector.value] || [{ label: 'Sin datos', value: 0 }];
             const values = points.map((p) => Number(p.value || 0));
-            const maxVal = Math.max(...values, 0);
-            const yMax = maxVal > 0 ? maxVal : 1;
-            const yStep = yMax / 10;
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+            const yRange = Math.max(maxVal - minVal, 1);
+            const yPadding = yRange * 0.12;
+            const yMin = minVal - yPadding;
+            const yMax = maxVal + yPadding;
+            const yStep = yRange / 8;
 
             if (typeof Chart === 'undefined') {
                 return;
@@ -857,9 +863,9 @@ try {
             const chartHeight = hasCategoryData ? 190 : 57;
 
             // Mantener altura fija para evitar crecimiento acumulado del canvas.
-            if (canvas.parentElement) {
-                canvas.parentElement.style.height = `${chartHeight}px`;
-                canvas.parentElement.style.maxHeight = `${chartHeight}px`;
+            if (chartWrap) {
+                chartWrap.style.height = `${chartHeight}px`;
+                chartWrap.style.maxHeight = `${chartHeight}px`;
             }
             canvas.style.height = `${chartHeight}px`;
             canvas.style.maxHeight = `${chartHeight}px`;
@@ -874,7 +880,7 @@ try {
                         data: points.map((p) => Number(p.value || 0)),
                         borderColor: '#0ea5a8',
                         backgroundColor: 'rgba(14,165,168,0.12)',
-                        fill: true,
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 4,
                         pointHoverRadius: 6,
@@ -914,9 +920,9 @@ try {
                     },
                     scales: {
                         y: {
-                            min: 0,
+                            min: yMin,
                             max: yMax,
-                            beginAtZero: true,
+                            beginAtZero: false,
                             ticks: {
                                 stepSize: yStep,
                             },

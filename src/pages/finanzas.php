@@ -490,17 +490,17 @@ try {
                 <?php $cur_symbol = get_currency_symbol($finanzas['currency'] ?? 'EUR'); ?>
                 <div class="stat-box primary">
                     <div class="stat-label">Balance</div>
-                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['balance'], 2); ?></p>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['balance'], 2) . ' ' . htmlspecialchars($cur_symbol); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
                 <div class="stat-box success">
                     <div class="stat-label">Ingresos</div>
-                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['income'], 2); ?></p>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['income'], 2) . ' ' . htmlspecialchars($cur_symbol); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
                 <div class="stat-box danger">
                     <div class="stat-label">Gastos</div>
-                    <p class="stat-value"><?php echo htmlspecialchars($cur_symbol) . ' ' . number_format((float)$finanzas['expenses'], 2); ?></p>
+                    <p class="stat-value"><?php echo number_format((float)$finanzas['expenses'], 2) . ' ' . htmlspecialchars($cur_symbol); ?></p>
                     <small><?php echo htmlspecialchars($finanzas['currency'] ?? 'EUR'); ?></small>
                 </div>
             </div>
@@ -667,8 +667,8 @@ try {
                                 <div class="comparator-original">
                                     <p class="comparator-label">Monto original:</p>
                                     <p class="comparator-value">
-                                        <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>
                                         <span id="original-amount">0.00</span>
+                                        <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>
                                         <span id="original-currency"><?php echo htmlspecialchars($finanzas['currency']); ?></span>
                                     </p>
                                 </div>
@@ -688,8 +688,8 @@ try {
                                 <div class="comparator-result" id="comparator-result" style="display: none;">
                                     <p class="comparator-label">Equivalente en:</p>
                                     <p class="comparator-value result-value">
-                                        <span id="result-symbol">€</span>
                                         <span id="result-amount">0.00</span>
+                                        <span id="result-symbol">€</span>
                                         <span id="result-currency">EUR</span>
                                     </p>
                                     <p class="comparator-rate" id="comparator-rate"></p>

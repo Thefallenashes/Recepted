@@ -119,7 +119,7 @@ SQL;
 CREATE TABLE IF NOT EXISTS `expense_categories` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,
-  `type` ENUM('income','expense') NOT NULL DEFAULT 'expense',
+    `type` ENUM('income','expense','mixed') NOT NULL DEFAULT 'mixed',
   `name` VARCHAR(80) NOT NULL,
   `color` VARCHAR(7) NOT NULL DEFAULT '#4CAF50',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -185,8 +185,11 @@ SQL;
         }
 
         if (!schema_column_exists($pdo, 'expense_categories', 'type', $dbName)) {
-            $pdo->exec("ALTER TABLE expense_categories ADD COLUMN type ENUM('income','expense') NOT NULL DEFAULT 'expense' AFTER user_id");
+            $pdo->exec("ALTER TABLE expense_categories ADD COLUMN type ENUM('income','expense','mixed') NOT NULL DEFAULT 'mixed' AFTER user_id");
         }
+
+        // Garantizar que la columna type soporte categorías mixtas en instalaciones existentes.
+        $pdo->exec("ALTER TABLE expense_categories MODIFY COLUMN type ENUM('income','expense','mixed') NOT NULL DEFAULT 'mixed'");
 
         if (schema_index_exists($pdo, 'expense_categories', 'unique_user_category', $dbName)) {
             try {

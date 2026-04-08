@@ -77,10 +77,6 @@ try {
 
         if ($action === 'add_category') {
             $categoryName = trim($_POST['category_name'] ?? '');
-            $categoryType = $_POST['category_type'] ?? 'expense';
-            if (!in_array($categoryType, ['income', 'expense'], true)) {
-                $categoryType = 'expense';
-            }
 
             if ($categoryName === '') {
                 $tipo = 'error';
@@ -90,7 +86,7 @@ try {
                        $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
                     $stmt->execute([
                         'user_id' => $userId,
-                        'type' => $categoryType,
+                        'type' => 'mixed',
                         'name' => $categoryName,
                     ]);
                     $tipo = 'exito';
@@ -113,39 +109,46 @@ try {
                 $tipo = 'error';
                 $mensaje = 'Selecciona una categoría válida para eliminar.';
             } else {
-                $stmt = $pdo->prepare('UPDATE transactions SET category_id = NULL WHERE user_id = :user_id AND category_id = :category_id');
-                $stmt->execute([
-                    'user_id' => $userId,
-                    'category_id' => $deleteCategoryId,
-                ]);
+                try {
+                    $pdo->beginTransaction();
 
-                $stmt = $pdo->prepare('DELETE FROM expense_categories WHERE id = :id AND user_id = :user_id');
-                $stmt->execute([
-                    'id' => $deleteCategoryId,
-                    'user_id' => $userId,
-                ]);
+                    $stmt = $pdo->prepare('DELETE FROM transactions WHERE user_id = :user_id AND category_id = :category_id');
+                    $stmt->execute([
+                        'user_id' => $userId,
+                        'category_id' => $deleteCategoryId,
+                    ]);
+                    $deletedTransactions = (int)$stmt->rowCount();
 
-                if ($stmt->rowCount() > 0) {
-                    $tipo = 'exito';
-                    $mensaje = 'Categoría eliminada correctamente.';
-                } else {
-                    $tipo = 'error';
-                    $mensaje = 'No se pudo eliminar la categoría seleccionada.';
+                    $stmt = $pdo->prepare('DELETE FROM expense_categories WHERE id = :id AND user_id = :user_id');
+                    $stmt->execute([
+                        'id' => $deleteCategoryId,
+                        'user_id' => $userId,
+                    ]);
+
+                    if ($stmt->rowCount() > 0) {
+                        $pdo->commit();
+                        $tipo = 'exito';
+                        $mensaje = 'Categoría eliminada correctamente junto con ' . $deletedTransactions . ' transacción(es) asociada(s).';
+                    } else {
+                        $pdo->rollBack();
+                        $tipo = 'error';
+                        $mensaje = 'No se pudo eliminar la categoría seleccionada.';
+                    }
+                } catch (Exception $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    throw $e;
                 }
             }
         }
 
         if ($action === 'add_transaction') {
-            $type = $_POST['type'] ?? 'expense';
-            if (!in_array($type, ['income', 'expense'], true)) {
-                $type = 'expense';
-            }
+            $type = 'expense';
 
             $amount = (float)($_POST['amount'] ?? 0);
             $description = trim($_POST['description'] ?? '');
-            $categoryId = $type === 'income'
-                ? (int)($_POST['category_id_income'] ?? 0)
-                : (int)($_POST['category_id_expense'] ?? 0);
+            $categoryId = (int)($_POST['category_id'] ?? 0);
 
             if ($amount <= 0 || $categoryId <= 0) {
                 $tipo = 'error';
@@ -155,11 +158,10 @@ try {
                 $category = categorize_transaction($description, $type);
 
                 if ($categoryIdToUse !== null) {
-                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id AND type = :type LIMIT 1');
+                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id LIMIT 1');
                     $stmt->execute([
                         'id' => $categoryIdToUse,
                         'user_id' => $userId,
-                        'type' => $type,
                     ]);
                     $customCategoryName = $stmt->fetchColumn();
                     if (is_string($customCategoryName) && $customCategoryName !== '') {
@@ -312,18 +314,11 @@ try {
     }
 
     // Obtener categorías personalizadas del usuario
-    $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY type ASC, name ASC');
+    $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY name ASC');
     $stmt->execute(['user_id' => $userId]);
     $personalCategories = $stmt->fetchAll();
-    $expenseCategories = [];
+    $expenseCategories = $personalCategories;
     $incomeCategories = [];
-    foreach ($personalCategories as $cat) {
-        if (($cat['type'] ?? 'expense') === 'income') {
-            $incomeCategories[] = $cat;
-        } else {
-            $expenseCategories[] = $cat;
-        }
-    }
 
     $stmt = $pdo->prepare("SELECT t.id, t.type, t.amount, t.category, t.description, t.created_at, t.category_id, COALESCE(ec.name, t.category) AS display_category
         FROM transactions t
@@ -346,17 +341,16 @@ try {
         $maxCategoryTotal = max($maxCategoryTotal, (float)$row['total']);
     }
 
-    // Obtener gastos agrupados por categoría personalizada
+    // Obtener saldo neto agrupado por categoría personalizada (ingresos - gastos)
     $stmt = $pdo->prepare("
         SELECT 
             ec.id,
             ec.name,
-            COALESCE(SUM(t.amount), 0) AS total,
+            COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END), 0) AS total,
             COUNT(t.id) AS transaction_count
                 FROM expense_categories ec
-        LEFT JOIN transactions t ON ec.id = t.category_id AND t.type = 'expense'
+        LEFT JOIN transactions t ON ec.id = t.category_id
         WHERE ec.user_id = :user_id
-                    AND ec.type = 'expense'
            GROUP BY ec.id, ec.name
         ORDER BY total DESC
     ");
@@ -369,9 +363,9 @@ try {
         foreach ($expensesByPersonalCategory as $cat) {
             $catId = (int)$cat['id'];
             $stmt = $pdo->prepare("
-                SELECT id, amount, description, created_at 
+                SELECT id, type, amount, description, created_at 
                 FROM transactions 
-                WHERE category_id = :category_id AND type = 'expense'
+                WHERE category_id = :category_id
                 ORDER BY created_at DESC
             ");
             $stmt->execute(['category_id' => $catId]);
@@ -387,10 +381,17 @@ try {
         if (!empty($transactionsByCategory[$catId])) {
             $txAsc = array_reverse($transactionsByCategory[$catId]);
             foreach ($txAsc as $txItem) {
-                $runningTotal += (float)$txItem['amount'];
+                $signedAmount = (($txItem['type'] ?? 'expense') === 'income')
+                    ? (float)$txItem['amount']
+                    : -(float)$txItem['amount'];
+                $runningTotal += $signedAmount;
                 $series[] = [
                     'label' => substr((string)$txItem['created_at'], 0, 10),
                     'value' => $runningTotal,
+                    'tx_type' => (string)($txItem['type'] ?? 'expense'),
+                    'tx_amount' => (float)($txItem['amount'] ?? 0),
+                    'tx_signed_amount' => $signedAmount,
+                    'tx_description' => (string)($txItem['description'] ?? ''),
                 ];
             }
         }
@@ -510,30 +511,14 @@ try {
             <form method="POST" action="" class="panel-form">
                 <input type="hidden" name="action" value="add_transaction">
                 <div class="form-group">
-                    <label for="type">Tipo</label>
-                    <select id="type" name="type" onchange="updateCategorySelector()">
-                        <option value="expense" selected>Gasto</option>
-                        <option value="income">Ingreso</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="amount">Importe</label>
                     <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
                 </div>
                 <div class="form-group">
-                    <label for="category_id_expense">Categoría (gasto)</label>
-                    <select id="category_id_expense" name="category_id_expense">
+                    <label for="category_id">Categoría</label>
+                    <select id="category_id" name="category_id" required>
                         <option value="" selected disabled hidden></option>
                         <?php foreach ($expenseCategories as $cat): ?>
-                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group" id="income-category-group" style="display: none;">
-                    <label for="category_id_income">Categoría (ingreso)</label>
-                    <select id="category_id_income" name="category_id_income">
-                        <option value="" selected disabled hidden></option>
-                        <?php foreach ($incomeCategories as $cat): ?>
                             <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -545,18 +530,11 @@ try {
                 <button class="btn" type="submit">Guardar transacción</button>
             </form>
 
-            <h2>Gastos por categoría</h2>
+            <h2>Crear categoria</h2>
             
             <div style="margin-bottom: 20px;">
                 <form method="POST" action="" class="panel-form" style="margin: 0;">
                     <input type="hidden" name="action" value="add_category">
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label for="category_type">Tipo de categoría</label>
-                        <select id="category_type" name="category_type" required>
-                            <option value="expense" selected>Gasto</option>
-                            <option value="income">Ingreso</option>
-                        </select>
-                    </div>
                        <div style="display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: flex-end;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="category_name">Nombre</label>
@@ -574,7 +552,7 @@ try {
                         <select id="selected_category_id" name="selected_category_id" class="category-select" onchange="renderCategoryLineChart()">
                             <option value="" selected disabled>Elije una categoria</option>
                             <?php foreach ($personalCategories as $cat): ?>
-                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?> (<?php echo ($cat['type'] ?? 'expense') === 'income' ? 'Ingreso' : 'Gasto'; ?>)</option>
+                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
                             <?php endforeach; ?>
                         </select>
                         <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
@@ -610,7 +588,7 @@ try {
                                             <div class="transaction-item">
                                                 <span class="tx-date"><?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?></span>
                                                 <span class="tx-description"><?php echo htmlspecialchars($tx['description']); ?></span>
-                                                <span class="tx-amount"><?php echo number_format((float)$tx['amount'], 2); ?></span>
+                                                <span class="tx-amount"><?php echo (($tx['type'] ?? 'expense') === 'income' ? '+' : '-') . number_format((float)$tx['amount'], 2); ?></span>
                                                 <form method="POST" action="" class="js-delete-transaction-form" style="display: inline; margin: 0;">
                                                     <input type="hidden" name="action" value="delete_transaction">
                                                     <input type="hidden" name="transaction_id" value="<?php echo (int)$tx['id']; ?>">
@@ -620,7 +598,7 @@ try {
                                         <?php endforeach; ?>
                                     </div>
                                     <div class="category-stats">
-                                        <strong>Total: <?php echo number_format($total, 2); ?> EUR</strong> | 
+                                        <strong>Balance neto: <?php echo ($total >= 0 ? '+' : '-') . number_format(abs($total), 2); ?> EUR</strong> | 
                                         <strong>Transacciones: <?php echo (int)$cat['transaction_count']; ?></strong>
                                     </div>
                                 </div>
@@ -814,8 +792,7 @@ try {
     <script src="../js/animation-manager.js" defer></script>
     <script>
         const categorySeries = <?php echo json_encode($chartSeriesByCategory, JSON_UNESCAPED_UNICODE); ?>;
-        const expenseCategoriesCount = <?php echo (int)count($expenseCategories); ?>;
-        const incomeCategoriesCount = <?php echo (int)count($incomeCategories); ?>;
+        let categoryLineChart = null;
 
         function toggleCategory(categoryId) {
             const details = document.getElementById('details-' + categoryId);
@@ -827,40 +804,6 @@ try {
             } else {
                 details.style.display = 'none';
                 toggle.textContent = '▼';
-            }
-        }
-
-        function updateCategorySelector() {
-            const typeSelect = document.getElementById('type');
-            const expenseSelect = document.getElementById('category_id_expense');
-            const incomeSelect = document.getElementById('category_id_income');
-            const incomeGroup = document.getElementById('income-category-group');
-
-            if (!typeSelect || !expenseSelect || !incomeSelect || !incomeGroup) {
-                return;
-            }
-
-            if (typeSelect.value === 'expense') {
-                expenseSelect.parentElement.style.display = 'block';
-                incomeGroup.style.display = 'none';
-                expenseSelect.required = true;
-                incomeSelect.required = false;
-                incomeSelect.value = '';
-            } else {
-                expenseSelect.parentElement.style.display = 'none';
-                incomeGroup.style.display = 'block';
-                expenseSelect.required = false;
-                incomeSelect.required = true;
-                expenseSelect.value = '';
-            }
-
-            if (typeSelect.value === 'expense' && expenseCategoriesCount === 0) {
-                expenseSelect.setCustomValidity('Primero crea una categoría de gasto.');
-            } else if (typeSelect.value === 'income' && incomeCategoriesCount === 0) {
-                incomeSelect.setCustomValidity('Primero crea una categoría de ingreso.');
-            } else {
-                expenseSelect.setCustomValidity('');
-                incomeSelect.setCustomValidity('');
             }
         }
 
@@ -879,71 +822,92 @@ try {
                 deleteButton.disabled = selector.value === '';
             }
 
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const cssWidth = canvas.clientWidth || 640;
-            const cssHeight = 190;
-
-            canvas.width = Math.floor(cssWidth * dpr);
-            canvas.height = Math.floor(cssHeight * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-            ctx.clearRect(0, 0, cssWidth, cssHeight);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, cssWidth, cssHeight);
+            if (categoryLineChart) {
+                categoryLineChart.destroy();
+                categoryLineChart = null;
+            }
 
             if (selector.value === '') {
                 return;
             }
 
             const points = categorySeries[selector.value] || [{ label: 'Sin datos', value: 0 }];
-
-            const padding = 24;
-            const plotWidth = cssWidth - padding * 2;
-            const plotHeight = cssHeight - padding * 2;
             const values = points.map((p) => Number(p.value || 0));
-            const maxVal = Math.max(...values, 1);
+            const maxVal = Math.max(...values, 0);
+            const yMax = maxVal > 0 ? maxVal : 1;
+            const yStep = yMax / 10;
 
-            ctx.strokeStyle = '#cbd5e1';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(padding, cssHeight - padding);
-            ctx.lineTo(cssWidth - padding, cssHeight - padding);
-            ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, cssHeight - padding);
-            ctx.stroke();
-
-            if (points.length === 1) {
-                const x = padding + plotWidth / 2;
-                const y = cssHeight - padding - (values[0] / maxVal) * plotHeight;
-                ctx.fillStyle = '#0ea5a8';
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fill();
+            if (typeof Chart === 'undefined') {
                 return;
             }
 
-            ctx.strokeStyle = '#0ea5a8';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            points.forEach((p, i) => {
-                const x = padding + (i / (points.length - 1)) * plotWidth;
-                const y = cssHeight - padding - (Number(p.value || 0) / maxVal) * plotHeight;
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            ctx.stroke();
+            // Mantener altura fija para evitar crecimiento acumulado del canvas.
+            if (canvas.parentElement) {
+                canvas.parentElement.style.height = '190px';
+                canvas.parentElement.style.maxHeight = '190px';
+            }
+            canvas.style.height = '190px';
+            canvas.style.maxHeight = '190px';
 
-            ctx.fillStyle = '#0ea5a8';
-            points.forEach((p, i) => {
-                const x = padding + (i / (points.length - 1)) * plotWidth;
-                const y = cssHeight - padding - (Number(p.value || 0) / maxVal) * plotHeight;
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
+            const ctx = canvas.getContext('2d');
+            categoryLineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: points.map((p) => p.label || ''),
+                    datasets: [{
+                        label: 'Balance acumulado',
+                        data: points.map((p) => Number(p.value || 0)),
+                        borderColor: '#0ea5a8',
+                        backgroundColor: 'rgba(14,165,168,0.12)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const i = items[0]?.dataIndex ?? 0;
+                                    const p = points[i] || {};
+                                    return p.label ? `Fecha: ${p.label}` : 'Transacción';
+                                },
+                                label: (ctxItem) => {
+                                    const i = ctxItem.dataIndex;
+                                    const p = points[i] || {};
+                                    const txType = (p.tx_type || 'expense') === 'income' ? 'Ingreso' : 'Gasto';
+                                    const signed = Number(p.tx_signed_amount || 0);
+                                    const signedText = `${signed >= 0 ? '+' : '-'}${Math.abs(signed).toFixed(2)}`;
+                                    const desc = String(p.tx_description || '').trim();
+                                    const lines = [
+                                        `${txType}: ${signedText}`,
+                                        `Balance acumulado: ${Number(p.value || 0).toFixed(2)}`,
+                                    ];
+                                    if (desc !== '') {
+                                        lines.push(`Detalle: ${desc}`);
+                                    }
+                                    return lines;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: yMax,
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: yStep,
+                            },
+                        }
+                    }
+                }
             });
         }
 
@@ -995,7 +959,6 @@ try {
 
         // Inicializar al cargar la página
         window.addEventListener('DOMContentLoaded', function() {
-            updateCategorySelector();
             renderCategoryLineChart();
             bindDynamicDeleteTransaction();
         });
@@ -1613,10 +1576,12 @@ try {
                     const gastos = sheet.gastos.reduce((a, b) => a + b, 0);
                     const beneficios = sheet.beneficios.reduce((a, b) => a + b, 0);
                     const balance = beneficios - gastos;
-                    const type = balance > 0 ? 'Ingreso' : balance < 0 ? 'Gasto' : 'Neutra';
-                    return `<li>${esc(categoryName)}-${esc(sheet.sheetName)} (${type}: ${balance > 0 ? '+' : ''}${fmt(balance)} €)</li>`;
+                    if (balance === 0) {
+                        return '';
+                    }
+                    const txType = balance > 0 ? 'Ingreso' : 'Gasto';
+                    return `<li>${esc(categoryName)}-${esc(sheet.sheetName)} (${txType}: ${balance > 0 ? '+' : '-'}${fmt(Math.abs(balance))} €)</li>`;
                 }).join('')}
-                <li><strong>${esc(categoryName)}-total</strong> (${balanceNeto > 0 ? 'Ingreso: +' : balanceNeto < 0 ? 'Gasto: -' : 'Neutra: '}${fmt(Math.abs(balanceNeto))} €)</li>
             </ul>
         `;
 

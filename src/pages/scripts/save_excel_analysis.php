@@ -43,11 +43,10 @@ try {
     assert_finanzas_schema($pdo);
 
     // 1. Crear o obtener la categoría
-    $stmt = $pdo->prepare('SELECT id FROM expense_categories WHERE user_id = :user_id AND name = :name AND type = :type LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id FROM expense_categories WHERE user_id = :user_id AND name = :name LIMIT 1');
     $stmt->execute([
         'user_id' => $userId,
         'name' => $categoryName,
-        'type' => 'expense'
     ]);
     $categoryId = $stmt->fetchColumn();
 
@@ -55,15 +54,17 @@ try {
         $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
         $stmt->execute([
             'user_id' => $userId,
-            'type' => 'expense',
+            'type' => 'mixed',
             'name' => $categoryName
         ]);
         $categoryId = $pdo->lastInsertId();
     }
 
-    // 2. Crear transacciones por hoja
+    // 2. Crear una transacción neta por hoja
     $totalBalance = 0;
     $transactionsCreated = [];
+
+    $insertTxStmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
 
     foreach ($sheets as $sheet) {
         $sheetName = trim($sheet['sheetName'] ?? '');
@@ -75,10 +76,8 @@ try {
             continue;
         }
 
-        // Determinar tipo de transacción y monto
         $txType = 'expense';
         $txAmount = abs($balance);
-        $txCategory = $categoryName;
 
         if ($balance > 0) {
             $txType = 'income';
@@ -88,57 +87,25 @@ try {
             $txAmount = abs($balance);
         }
 
-        // Nombre de la transacción: archivo-hoja
-        $txDescription = $categoryName . '-' . $sheetName;
+        // Si el balance es 0 no crea transacción de hoja
+        if ($txAmount > 0) {
+            $insertTxStmt->execute([
+                'user_id' => $userId,
+                'type' => $txType,
+                'amount' => $txAmount,
+                'category' => $categoryName,
+                'category_id' => $categoryId,
+                'description' => $categoryName . '-' . $sheetName,
+            ]);
 
-        $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
-        $stmt->execute([
-            'user_id' => $userId,
-            'type' => $txType,
-            'amount' => $txAmount,
-            'category' => $txCategory,
-            'category_id' => $categoryId,
-            'description' => $txDescription
-        ]);
+            $transactionsCreated[] = [
+                'sheet' => $sheetName,
+                'type' => $txType,
+                'amount' => $txAmount,
+            ];
+        }
 
         $totalBalance += $balance;
-        $transactionsCreated[] = [
-            'sheet' => $sheetName,
-            'type' => $txType,
-            'amount' => $txAmount
-        ];
-    }
-
-    // 3. Crear transacción total: archivo-total
-    $totalTxType = 'expense';
-    $totalTxAmount = abs($totalBalance);
-
-    if ($totalBalance > 0) {
-        $totalTxType = 'income';
-        $totalTxAmount = $totalBalance;
-    } elseif ($totalBalance < 0) {
-        $totalTxType = 'expense';
-        $totalTxAmount = abs($totalBalance);
-    }
-
-    $totalTxDescription = $categoryName . '-total';
-
-    if ($totalBalance !== 0) {
-        $stmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
-        $stmt->execute([
-            'user_id' => $userId,
-            'type' => $totalTxType,
-            'amount' => $totalTxAmount,
-            'category' => $categoryName,
-            'category_id' => $categoryId,
-            'description' => $totalTxDescription
-        ]);
-
-        $transactionsCreated[] = [
-            'sheet' => 'TOTAL',
-            'type' => $totalTxType,
-            'amount' => $totalTxAmount
-        ];
     }
 
     // 4. Actualizar balance en tabla finanzas

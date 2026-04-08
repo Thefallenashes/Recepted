@@ -30,7 +30,8 @@ try {
     $recent_transactions = fetch_recent_user_transactions($pdo, $userId, 5);
     $uploads = fetch_uploads_visible_for_user($pdo, $userId);
 } catch (PDOException $e) {
-    echo "Error al conectar: " . htmlspecialchars($e->getMessage());
+    echo 'No se pudo cargar la información del panel en este momento.';
+    error_log('Error home panel: ' . $e->getMessage());
     exit();
 }
 
@@ -51,6 +52,7 @@ try {
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
         'nav_class' => 'navbar sticky-links',
+        'show_home' => false,
         'home_href' => 'home.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
@@ -68,6 +70,7 @@ try {
             <div class="card-header">
                 <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
                 <form method="POST" action="">
+                    <?php echo csrf_input_field(); ?>
                     <button type="submit" name="debug" value="1" class="btn btn-sm btn-secondary">Modo desarrollo</button>
                 </form>
             </div>

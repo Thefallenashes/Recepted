@@ -55,9 +55,11 @@ if (!function_exists('fetch_recent_user_transactions')) {
      */
     function fetch_recent_user_transactions(PDO $pdo, int $userId, int $limit = 5): array
     {
-        $limit = max(1, $limit);
-        $stmt = $pdo->prepare('SELECT * FROM transactions WHERE user_id = :user_id ORDER BY created_at DESC LIMIT ' . $limit);
-        $stmt->execute(['user_id' => $userId]);
+        $limit = max(1, min(100, $limit));
+        $stmt = $pdo->prepare('SELECT * FROM transactions WHERE user_id = :user_id ORDER BY created_at DESC LIMIT :limit');
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 }
@@ -135,10 +137,13 @@ if (!function_exists('fetch_expense_report_last_days')) {
      */
     function fetch_expense_report_last_days(PDO $pdo, int $days = 30, int $limit = 10): array
     {
-        $days = max(1, $days);
-        $limit = max(1, $limit);
-        $sql = "SELECT category, SUM(amount) AS total FROM transactions WHERE type = 'expense' AND created_at >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY) GROUP BY category ORDER BY total DESC LIMIT " . $limit;
+        $days = max(1, min(365, $days));
+        $limit = max(1, min(100, $limit));
+        $cutoff = (new DateTimeImmutable())->sub(new DateInterval('P' . $days . 'D'))->format('Y-m-d H:i:s');
+        $sql = "SELECT category, SUM(amount) AS total FROM transactions WHERE type = 'expense' AND created_at >= :cutoff GROUP BY category ORDER BY total DESC LIMIT :limit";
         $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':cutoff', $cutoff, PDO::PARAM_STR);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }

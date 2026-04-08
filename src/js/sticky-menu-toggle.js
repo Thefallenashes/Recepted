@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var menus = document.querySelectorAll('[data-sticky-menu]');
 
     menus.forEach(function (menu) {
+        if (menu.dataset.stickyMenuInit === '1') {
+            return;
+        }
+        menu.dataset.stickyMenuInit = '1';
+
         var toggleBtn = menu.querySelector('[data-menu-toggle]');
         var toggleIcon = menu.querySelector('[data-menu-toggle-icon]');
         var homeBtn = menu.querySelector('.menu-icon-btn[aria-label="Inicio"]');
@@ -19,6 +24,14 @@ document.addEventListener('DOMContentLoaded', function () {
         var expandedIcon = menu.getAttribute('data-icon-expanded') || '../images/OcultarMenuDesplegable.PNG';
         var animatedItems = [stickyLinks, homeBtn, logoutBtn].filter(Boolean);
         var isAnimating = false;
+        var cleanupFns = [];
+
+        function on(el, evt, handler) {
+            el.addEventListener(evt, handler);
+            cleanupFns.push(function () {
+                el.removeEventListener(evt, handler);
+            });
+        }
 
         function syncIcons(collapsed) {
             toggleBtn.setAttribute('aria-expanded', String(!collapsed));
@@ -75,11 +88,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     resolve();
                 }
 
-                el.addEventListener('transitionend', function handler(e) {
+                function handler(e) {
                     if (e.target !== el || e.propertyName !== 'opacity') return;
                     el.removeEventListener('transitionend', handler);
                     finish();
-                });
+                }
+                el.addEventListener('transitionend', handler);
                 el._slideTimer = setTimeout(finish, DURATION + 60);
             });
         }
@@ -119,16 +133,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     resolve();
                 }
 
-                el.addEventListener('transitionend', function handler(e) {
+                function handler(e) {
                     if (e.target !== el || e.propertyName !== 'opacity') return;
                     el.removeEventListener('transitionend', handler);
                     finish();
-                });
+                }
+                el.addEventListener('transitionend', handler);
                 el._slideTimer = setTimeout(finish, DURATION + 60);
             });
         }
 
-        toggleBtn.addEventListener('click', function () {
+        function onToggleClick() {
             if (isAnimating) {
                 return;
             }
@@ -150,7 +165,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     isAnimating = false;
                 });
             }
-        });
+        }
+        on(toggleBtn, 'click', onToggleClick);
 
         // Set initial state
         var startCollapsed = menu.classList.contains('is-collapsed');
@@ -158,5 +174,19 @@ document.addEventListener('DOMContentLoaded', function () {
             item.hidden = startCollapsed;
         });
         syncIcons(startCollapsed);
+
+        on(window, 'pagehide', function () {
+            animatedItems.forEach(function (el) {
+                if (el && el._slideTimer) {
+                    clearTimeout(el._slideTimer);
+                    el._slideTimer = null;
+                }
+            });
+            cleanupFns.forEach(function (fn) {
+                fn();
+            });
+            cleanupFns = [];
+            delete menu.dataset.stickyMenuInit;
+        });
     });
 });

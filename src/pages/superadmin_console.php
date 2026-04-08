@@ -3,6 +3,61 @@ require_once __DIR__ . '/includes/page_bootstrap.php';
 
 require_min_role('superadmin', 'home.php');
 
+function strip_leading_sql_comments(string $query): string
+{
+    $clean = ltrim($query);
+
+    while (true) {
+        $before = $clean;
+        $clean = preg_replace('/\A\/\*.*?\*\//s', '', $clean);
+        $clean = preg_replace('/\A--[^\r\n]*(\r\n|\r|\n)?/', '', $clean);
+        $clean = preg_replace('/\A#[^\r\n]*(\r\n|\r|\n)?/', '', $clean);
+        $clean = ltrim((string)$clean);
+
+        if ($clean === $before) {
+            break;
+        }
+    }
+
+    return $clean;
+}
+
+function is_readonly_sql_allowed(string $query): bool
+{
+    $clean = strip_leading_sql_comments($query);
+    if ($clean === '') {
+        return false;
+    }
+
+    if (preg_match('/[;\x00]/', $clean)) {
+        return false;
+    }
+
+    if (!preg_match('/\A(SELECT|SHOW|DESCRIBE|EXPLAIN)\b/i', $clean)) {
+        return false;
+    }
+
+    if (preg_match('/\b(INTO\s+OUTFILE|INTO\s+DUMPFILE|LOAD_FILE\s*\(|INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|REPLACE|GRANT|REVOKE|SET|USE|CALL|DO|HANDLER|LOCK|UNLOCK)\b/i', $clean)) {
+        return false;
+    }
+
+    return true;
+}
+
+function apply_readonly_limit(string $query, int $maxRows = 100): string
+{
+    $clean = trim($query);
+    if (!preg_match('/\A(SELECT|SHOW)\b/i', strip_leading_sql_comments($clean))) {
+        return $clean;
+    }
+
+    if (preg_match('/\bLIMIT\b/i', $clean)) {
+        return $clean;
+    }
+
+    return $clean . ' LIMIT ' . max(1, $maxRows);
+}
+
 $mensaje = '';
 $tipo = '';
 $queryResult = [];
@@ -35,19 +90,18 @@ try {
 
     if (!empty($_SESSION['mfa_superadmin_verified']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_query'])) {
         $query = trim($_POST['sql_query'] ?? '');
-        $upper = strtoupper($query);
 
-        $allowed = str_starts_with($upper, 'SELECT') || str_starts_with($upper, 'SHOW') || str_starts_with($upper, 'DESCRIBE');
-        if (!$allowed) {
+        if (!is_readonly_sql_allowed($query)) {
             $tipo = 'error';
-            $mensaje = 'Solo se permiten consultas SELECT, SHOW o DESCRIBE.';
+            $mensaje = 'Consulta no permitida. Solo lectura sin comentarios de evasión ni multisentencias.';
         } else {
-            $stmt = $pdo->query($query . ' LIMIT 100');
+            $queryToRun = apply_readonly_limit($query, 100);
+            $stmt = $pdo->query($queryToRun);
             $queryResult = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if (!empty($queryResult)) {
                 $queryColumns = array_keys($queryResult[0]);
             }
-            record_audit_log($pdo, 'superadmin_sql_query', 'critical', 'Consulta ejecutada en consola SQL superadmin');
+            record_audit_log($pdo, 'superadmin_sql_query', 'critical', 'Consulta de solo lectura ejecutada en consola SQL superadmin');
             $tipo = 'exito';
             $mensaje = 'Consulta ejecutada.';
         }
@@ -85,7 +139,6 @@ try {
             ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'config.php', 'label' => 'Configuración'],
             ['href' => 'admin_panel.php', 'label' => 'Panel de administracion'],
-            ['href' => 'superadmin_console.php', 'label' => 'Consola'],
         ],
     ]);
     ?>
@@ -102,6 +155,7 @@ try {
             <p>Introduce el código MFA para desbloquear la consola.</p>
             <p><strong>Código MFA demo:</strong> <?php echo htmlspecialchars((string)($_SESSION['mfa_superadmin_code'] ?? '')); ?> (expira en 5 minutos)</p>
             <form method="POST" action="">
+                <?php echo csrf_input_field(); ?>
                 <div class="form-group">
                     <label for="mfa_code">Código MFA</label>
                     <input id="mfa_code" name="mfa_code" required>
@@ -134,6 +188,7 @@ try {
 
             <h2>Acceso directo MySQL (solo lectura)</h2>
             <form method="POST" action="">
+                <?php echo csrf_input_field(); ?>
                 <div class="form-group">
                     <label for="sql_query">Consulta SQL</label>
                     <textarea id="sql_query" name="sql_query" rows="4" placeholder="SELECT * FROM users" required><?php echo htmlspecialchars($_POST['sql_query'] ?? ''); ?></textarea>

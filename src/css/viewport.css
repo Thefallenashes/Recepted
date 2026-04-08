@@ -45,9 +45,17 @@ a.btn {
 /* Disable default blue highlight on iOS */
 -webkit-tap-highlight-color: rgba(53, 64, 233, 0.1);
 
-/* Smooth transitions on mobile */
-* {
-    -webkit-transition: background-color 0.3s ease, color 0.3s ease;
+/* Scoped transitions for interactive UI to avoid global repaint cost */
+button,
+a,
+.btn,
+.menu-icon-btn,
+input,
+select,
+textarea,
+.card {
+    -webkit-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 button,

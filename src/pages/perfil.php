@@ -93,6 +93,7 @@ try {
 
         <?php if (!empty($usuario)): ?>
             <form method="POST" action="">
+                <?php echo csrf_input_field(); ?>
                 <div class="form-group">
                     <label>Correo:</label>
                     <div><?php echo htmlspecialchars($usuario['correo']); ?></div>

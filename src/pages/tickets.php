@@ -101,7 +101,6 @@ try {
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],
-            ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'config.php', 'label' => 'Configuración'],
             ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],
             ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
@@ -118,6 +117,7 @@ try {
 
         <h2>Crear incidencia</h2>
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="title">Título</label>
                 <input id="title" name="title" required>
@@ -167,6 +167,7 @@ try {
                             <?php if (has_min_role('admin')): ?>
                                 <td>
                                     <form method="POST" action="" style="display:inline">
+                                        <?php echo csrf_input_field(); ?>
                                         <input type="hidden" name="ticket_id" value="<?php echo (int)$ticket['id']; ?>">
                                         <select name="status">
                                             <option value="open" <?php echo $ticket['status'] === 'open' ? 'selected' : ''; ?>>open</option>

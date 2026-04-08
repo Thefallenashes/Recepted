@@ -1,5 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/includes/auth_bootstrap.php';
+require_once __DIR__ . '/includes/sticky_menu.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -67,9 +68,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
+    <?php
+    render_sticky_menu([
+        'container_class' => 'sticky-home-menu sticky-auth-menu',
+        'inner_class' => 'sticky-home-menu-inner sticky-auth-menu-inner',
+        'home_href' => 'landing.php',
+        'home_label' => 'Inicio',
+        'show_logout' => false,
+        'nav_items' => [
+            ['href' => 'register.php', 'label' => 'Registrarse'],
+        ],
+    ]);
+    ?>
+
     <div class="login-container">
         <h1>Iniciar Sesión</h1>
 
@@ -80,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="correo">Correo Electrónico:</label>
                 <input type="email" id="correo" name="correo" required
@@ -101,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p class="link-registro">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
     </div>
+    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
 

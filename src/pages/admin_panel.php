@@ -87,7 +87,6 @@ try {
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],
             ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'config.php', 'label' => 'Configuración'],
-            ['href' => 'admin_panel.php', 'label' => 'Panel de administracion'],
             ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
         ],
     ]);
@@ -130,6 +129,7 @@ try {
                             <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                             <td>
                                 <form method="POST" action="" style="display:inline">
+                                    <?php echo csrf_input_field(); ?>
                                     <input type="hidden" name="target_user_id" value="<?php echo (int)$user['id']; ?>">
                                     <select name="new_role">
                                         <option value="user" <?php echo ($user['role'] ?? '') === 'user' ? 'selected' : ''; ?>>user</option>

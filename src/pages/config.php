@@ -55,7 +55,6 @@ try {
         'nav_items' => [
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],
             ['href' => 'tickets.php', 'label' => 'Tickets'],
-            ['href' => 'config.php', 'label' => 'Configuración'],
             ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],
             ['href' => 'superadmin_console.php', 'label' => 'Consola', 'min_role' => 'superadmin'],
         ],
@@ -68,6 +67,7 @@ try {
         <?php endif; ?>
 
         <form method="POST" action="" id="config-form">
+            <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="currency-search">Moneda preferida:</label>
                 <div class="currency-picker">

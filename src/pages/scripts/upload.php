@@ -149,6 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="post" action="" enctype="multipart/form-data">
+            <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="file">Archivo:</label>
                 <input type="file" id="file" name="file" accept=".csv,.xls,.xlsx,.xlsm,.xlsb,.xltx" required>

@@ -1,13 +1,47 @@
 @import url('./components.css');
 
 body {
-    display: grid;
-    place-items: center;
-    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.sticky-home-menu {
+    width: 100%;
+    align-self: stretch;
+}
+
+.sticky-auth-menu {
+    width: 100% !important;
+    min-width: 100%;
+    margin: 0 !important;
+    left: 0;
+    right: 0;
+    display: block;
+}
+
+.sticky-home-menu-inner {
+    width: 80%;
+    margin: 0 auto;
+    padding: 15.4px 0;
+}
+
+.sticky-auth-menu-inner {
+    width: 80% !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+}
+
+.sticky-home-menu .menu-icon-btn,
+.sticky-home-menu .sticky-links a {
+    min-height: 40px;
+    padding: 8px 14px;
 }
 
 .login-container {
     width: 80%;
+    margin: 28px auto 24px;
     padding: 28px;
     border: 1px solid #e2e8f0;
     border-radius: 20px;

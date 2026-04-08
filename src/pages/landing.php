@@ -114,9 +114,11 @@ try {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
         </form>
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <button type="submit" name="clear_cookies" value="1" class="btn">Borrar cookies</button>
         </form>
 

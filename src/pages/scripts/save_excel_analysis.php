@@ -147,12 +147,12 @@ try {
     error_log('Excel analysis error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error al guardar el análisis: ' . $e->getMessage()
+        'error' => 'Error al guardar el análisis'
     ]);
 } catch (Exception $e) {
     error_log('Excel analysis error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error inesperado: ' . $e->getMessage()
+        'error' => 'Error inesperado al guardar el análisis'
     ]);
 }

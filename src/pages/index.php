@@ -116,9 +116,11 @@ try {
         <p>Usuarios registrados: <?php echo (int)$total_users; ?></p>
         <p>Archivos subidos: <?php echo (int)$total_uploads; ?></p>
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
         </form>
         <form method="POST" action="">
+            <?php echo csrf_input_field(); ?>
             <button type="submit" name="clear_cookies" value="1" class="btn">Borrar cookies</button>
         </form>
 

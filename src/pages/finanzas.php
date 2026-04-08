@@ -463,7 +463,6 @@ try {
         'home_href' => 'home.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
-            ['href' => 'finanzas.php', 'label' => 'Finanzas'],
             ['href' => 'mis_uploads.php', 'label' => 'Mis archivos'],
             ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'config.php', 'label' => 'Configuración'],
@@ -519,6 +518,7 @@ try {
                                         <?php endforeach; ?>
                                     </select>
                                     <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
+                                        <?php echo csrf_input_field(); ?>
                                         <input type="hidden" name="action" value="delete_category">
                                         <input type="hidden" name="selected_category_id" id="delete_selected_category_id" value="">
                                         <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
@@ -555,6 +555,7 @@ try {
                                                             <span class="tx-description"><?php echo htmlspecialchars($tx['description']); ?></span>
                                                             <span class="tx-amount"><?php echo (($tx['type'] ?? 'expense') === 'income' ? '+' : '-') . number_format((float)$tx['amount'], 2); ?></span>
                                                             <form method="POST" action="" class="js-delete-transaction-form" style="display: inline; margin: 0;">
+                                                                <?php echo csrf_input_field(); ?>
                                                                 <input type="hidden" name="action" value="delete_transaction">
                                                                 <input type="hidden" name="transaction_id" value="<?php echo (int)$tx['id']; ?>">
                                                                 <button type="submit" class="tx-delete-btn" onclick="return confirm('¿Eliminar esta transacción?');">Eliminar</button>
@@ -603,6 +604,7 @@ try {
                                             <div class="progress-fill" style="width: <?php echo number_format($goalProgress, 2, '.', ''); ?>%;"></div>
                                         </div>
                                         <form method="POST" action="" class="goal-progress-form">
+                                            <?php echo csrf_input_field(); ?>
                                             <input type="hidden" name="action" value="add_goal_progress">
                                             <input type="hidden" name="goal_id" value="<?php echo (int)$goal['id']; ?>">
                                             <input type="number" name="add_amount" min="0.01" step="0.01" placeholder="+ importe" required>
@@ -736,6 +738,7 @@ try {
             <section class="finance-section">
                 <h2 class="mt-4 mb-2">Nueva transacción</h2>
                 <form method="POST" action="" class="panel-form section-surface multi-field-form">
+                            <?php echo csrf_input_field(); ?>
                             <input type="hidden" name="action" value="add_transaction">
                             <div class="form-group">
                                 <label for="amount">Importe</label>
@@ -761,6 +764,7 @@ try {
             <section class="finance-section">
                 <h2>Crear categoria</h2>
                 <form method="POST" action="" class="panel-form section-surface category-create-form">
+                            <?php echo csrf_input_field(); ?>
                             <input type="hidden" name="action" value="add_category">
                             <div class="form-row">
                                 <div class="form-group no-margin">
@@ -777,6 +781,7 @@ try {
             <section class="finance-section">
                 <h2>Crear meta de ahorro</h2>
                 <form method="POST" action="" class="panel-form section-surface multi-field-form">
+                            <?php echo csrf_input_field(); ?>
                             <input type="hidden" name="action" value="add_goal">
                             <div class="form-group">
                                 <label for="goal_name">Nombre de la meta</label>
@@ -803,6 +808,9 @@ try {
     <script src="../js/sticky-menu-toggle.js" defer></script>
     <script src="../js/mobile-menu-enhancements.js" defer></script>
     <script src="../js/animation-manager.js" defer></script>
+    <script>
+        window.__csrfToken = <?php echo json_encode(get_csrf_token(), JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <script>
         const categorySeries = <?php echo json_encode($chartSeriesByCategory, JSON_UNESCAPED_UNICODE); ?>;
         let categoryLineChart = null;
@@ -1679,7 +1687,8 @@ try {
             const response = await fetch('scripts/save_excel_analysis.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json; charset=UTF-8'
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-CSRF-Token': window.__csrfToken || ''
                 },
                 body: JSON.stringify(payload)
             });
@@ -1886,7 +1895,10 @@ try {
             try {
                 const response = await fetch('scripts/convert_currency.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': window.__csrfToken || ''
+                    },
                     body: new URLSearchParams({
                         amount: amount,
                         from: fromCurrency,

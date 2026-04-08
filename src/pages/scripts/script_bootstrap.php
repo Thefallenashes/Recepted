@@ -2,6 +2,9 @@
 
 require_once __DIR__ . '/../includes/auth_bootstrap.php';
 
+get_csrf_token();
+enforce_csrf_protection('http403');
+
 /**
  * Exige sesión autenticada para scripts y devuelve el user_id actual.
  */

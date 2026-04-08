@@ -1,4 +1,4 @@
-﻿-<?php
+﻿<?php
 require_once __DIR__ . '/script_bootstrap.php';
 
 $userId = require_script_user('http403');
@@ -26,9 +26,17 @@ try {
         exit();
     }
 
+    $originalName = (string)($row['filename'] ?? 'archivo');
+    $basename = basename($originalName);
+    $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $basename);
+    if (!is_string($safeName) || $safeName === '') {
+        $safeName = 'archivo';
+    }
+
     header('Content-Description: File Transfer');
     header('Content-Type: ' . ($row['mime'] ?: 'application/octet-stream'));
-    header('Content-Disposition: attachment; filename="' . basename($row['filename']) . '"');
+    header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode($basename));
+    header('X-Content-Type-Options: nosniff');
     header('Expires: 0');
     header('Cache-Control: must-revalidate');
     header('Pragma: public');

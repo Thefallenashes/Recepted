@@ -350,6 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
                                 <?php endif; ?>
                                 |
                                 <form method="POST" action="scripts/delete_upload.php" style="display:inline" class="delete-upload-form" data-filename="<?php echo htmlspecialchars($up['filename'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo csrf_input_field(); ?>
                                     <input type="hidden" name="id" value="<?php echo $up['id']; ?>">
                                     <button type="submit">Eliminar</button>
                                 </form>
@@ -366,6 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
             <h2 id="uploadModalTitle">Subir archivos</h2>
 
             <form id="uploadMultipleForm" method="POST" action="" enctype="multipart/form-data">
+                <?php echo csrf_input_field(); ?>
                 <input type="hidden" name="upload_multiple" value="1">
 
                 <input

@@ -507,279 +507,291 @@ try {
                 </div>
             </div>
 
-            <h2 class="mt-4 mb-2">Nueva transacción</h2>
-            <form method="POST" action="" class="panel-form">
-                <input type="hidden" name="action" value="add_transaction">
-                <div class="form-group">
-                    <label for="amount">Importe</label>
-                    <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="category_id">Categoría</label>
-                    <select id="category_id" name="category_id" required>
-                        <option value="" selected disabled hidden></option>
-                        <?php foreach ($expenseCategories as $cat): ?>
-                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="description">Descripción</label>
-                    <input id="description" name="description">
-                </div>
-                <button class="btn" type="submit">Guardar transacción</button>
-            </form>
-
-            <h2>Crear categoria</h2>
-            
-            <div style="margin-bottom: 20px;">
-                <form method="POST" action="" class="panel-form" style="margin: 0;">
-                    <input type="hidden" name="action" value="add_category">
-                       <div style="display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: flex-end;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="category_name">Nombre</label>
-                            <input id="category_name" name="category_name" required>
-                        </div>
-                        <button class="btn" type="submit" style="margin: 0;">Crear</button>
-                    </div>
-                </form>
-            </div>
-            <h2>Categorías:</h2>
-            <div class="panel-form" style="margin-bottom: 20px;">
-                <?php if (empty($personalCategories)): ?>
-                <?php else: ?>
-                    <div class="category-selector-row">
-                        <select id="selected_category_id" name="selected_category_id" class="category-select" onchange="renderCategoryLineChart()">
-                            <option value="" selected disabled>Elije una categoria</option>
-                            <?php foreach ($personalCategories as $cat): ?>
-                                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
-                            <input type="hidden" name="action" value="delete_category">
-                            <input type="hidden" name="selected_category_id" id="delete_selected_category_id" value="">
-                            <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
-                        </form>
-                    </div>
-                    <canvas id="categoryLineChart" height="190"></canvas>
-                <?php endif; ?>
-            </div>
-
-            <?php if (empty($expensesByPersonalCategory)): ?>
-            <?php else: ?>
-                <div class="category-expenses-list">
-                    <?php foreach ($expensesByPersonalCategory as $index => $cat): ?>
-                        <?php
-                            $catId = (int)$cat['id'];
-                            $total = (float)$cat['total'];
-                            $hasTransactions = !empty($transactionsByCategory[$catId]) && count($transactionsByCategory[$catId]) > 0;
-                        ?>
-                           <div class="category-card">
-                            <div class="category-header" onclick="toggleCategory(<?php echo $catId; ?>)" style="cursor: pointer;">
-                                <div class="category-title-bar">
-                                       <span class="category-name"><?php echo htmlspecialchars($cat['name']); ?></span>
-                                    <span class="toggle-icon" id="toggle-<?php echo $catId; ?>">▼</span>
-                                </div>
-                            </div>
-                            <?php if ($hasTransactions): ?>
-                                <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
-                                    <div class="transactions-list">
-                                        <?php foreach ($transactionsByCategory[$catId] as $tx): ?>
-                                            <div class="transaction-item">
-                                                <span class="tx-date"><?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?></span>
-                                                <span class="tx-description"><?php echo htmlspecialchars($tx['description']); ?></span>
-                                                <span class="tx-amount"><?php echo (($tx['type'] ?? 'expense') === 'income' ? '+' : '-') . number_format((float)$tx['amount'], 2); ?></span>
-                                                <form method="POST" action="" class="js-delete-transaction-form" style="display: inline; margin: 0;">
-                                                    <input type="hidden" name="action" value="delete_transaction">
-                                                    <input type="hidden" name="transaction_id" value="<?php echo (int)$tx['id']; ?>">
-                                                    <button type="submit" class="tx-delete-btn" onclick="return confirm('¿Eliminar esta transacción?');">Eliminar</button>
-                                                </form>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                    <div class="category-stats">
-                                        <strong>Balance neto: <?php echo ($total >= 0 ? '+' : '-') . number_format(abs($total), 2); ?> EUR</strong> | 
-                                        <strong>Transacciones: <?php echo (int)$cat['transaction_count']; ?></strong>
-                                    </div>
-                                </div>
+            <section class="finance-section">
+                        <h2>Categorías</h2>
+                        <div class="panel-form section-surface">
+                            <?php if (empty($personalCategories)): ?>
                             <?php else: ?>
-                                <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
-                                    <p style="padding: 10px; color: #999;">No hay transacciones en esta categoría</p>
+                                <div class="category-selector-row">
+                                    <select id="selected_category_id" name="selected_category_id" class="category-select" onchange="renderCategoryLineChart()">
+                                        <option value="" selected disabled>Elije una categoria</option>
+                                        <?php foreach ($personalCategories as $cat): ?>
+                                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <form method="POST" action="" onsubmit="return confirm('¿Eliminar la categoría seleccionada?');">
+                                        <input type="hidden" name="action" value="delete_category">
+                                        <input type="hidden" name="selected_category_id" id="delete_selected_category_id" value="">
+                                        <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
+                                    </form>
                                 </div>
+                                <canvas id="categoryLineChart" height="57"></canvas>
                             <?php endif; ?>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
 
-            <h2>Metas de ahorro</h2>
-            <form method="POST" action="" class="panel-form">
-                <input type="hidden" name="action" value="add_goal">
-                <div class="form-group">
-                    <label for="goal_name">Nombre de la meta</label>
-                    <input id="goal_name" name="goal_name">
-                </div>
-                <div class="form-group">
-                    <label for="target_amount">Importe objetivo</label>
-                    <input id="target_amount" name="target_amount" type="number" min="0.01" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="target_date">Fecha objetivo</label>
-                    <input id="target_date" name="target_date" type="date">
-                </div>
-                <button class="btn" type="submit">Crear meta</button>
-            </form>
+                        <?php if (empty($expensesByPersonalCategory)): ?>
+                        <?php else: ?>
+                            <div class="category-expenses-list">
+                                <?php foreach ($expensesByPersonalCategory as $index => $cat): ?>
+                                    <?php
+                                        $catId = (int)$cat['id'];
+                                        $total = (float)$cat['total'];
+                                        $hasTransactions = !empty($transactionsByCategory[$catId]) && count($transactionsByCategory[$catId]) > 0;
+                                    ?>
+                                       <div class="category-card">
+                                        <div class="category-header" onclick="toggleCategory(<?php echo $catId; ?>)" style="cursor: pointer;">
+                                            <div class="category-title-bar">
+                                                   <span class="category-name"><?php echo htmlspecialchars($cat['name']); ?></span>
+                                                <span class="toggle-icon" id="toggle-<?php echo $catId; ?>">▼</span>
+                                            </div>
+                                        </div>
+                                        <?php if ($hasTransactions): ?>
+                                            <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
+                                                <div class="transactions-list">
+                                                    <?php foreach ($transactionsByCategory[$catId] as $tx): ?>
+                                                        <div class="transaction-item">
+                                                            <span class="tx-date"><?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?></span>
+                                                            <span class="tx-description"><?php echo htmlspecialchars($tx['description']); ?></span>
+                                                            <span class="tx-amount"><?php echo (($tx['type'] ?? 'expense') === 'income' ? '+' : '-') . number_format((float)$tx['amount'], 2); ?></span>
+                                                            <form method="POST" action="" class="js-delete-transaction-form" style="display: inline; margin: 0;">
+                                                                <input type="hidden" name="action" value="delete_transaction">
+                                                                <input type="hidden" name="transaction_id" value="<?php echo (int)$tx['id']; ?>">
+                                                                <button type="submit" class="tx-delete-btn" onclick="return confirm('¿Eliminar esta transacción?');">Eliminar</button>
+                                                            </form>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <div class="category-stats">
+                                                    <strong>Balance neto: <?php echo ($total >= 0 ? '+' : '-') . number_format(abs($total), 2); ?> EUR</strong> |
+                                                    <strong>Transacciones: <?php echo (int)$cat['transaction_count']; ?></strong>
+                                                </div>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="category-details" id="details-<?php echo $catId; ?>" style="display: none;">
+                                                <p style="padding: 10px; color: #999;">No hay transacciones en esta categoría</p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </section>
 
-            <?php if (empty($goals)): ?>
-                <p>No tienes metas registradas.</p>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Meta</th>
-                            <th>Objetivo</th>
-                            <th>Actual</th>
-                            <th>Progreso</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($goals as $goal): ?>
-                            <?php
-                                $goalTarget = (float)$goal['target_amount'];
-                                $goalCurrent = (float)$goal['current_amount'];
-                                $goalProgress = $goalTarget > 0 ? min(100, ($goalCurrent / $goalTarget) * 100) : 0;
-                            ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($goal['name']); ?></td>
-                                <td><?php echo number_format($goalTarget, 2); ?></td>
-                                <td><?php echo number_format($goalCurrent, 2); ?></td>
-                                <td><?php echo number_format($goalProgress, 2); ?>%</td>
-                                <td>
-                                    <form method="POST" action="" style="display:inline">
-                                        <input type="hidden" name="action" value="add_goal_progress">
-                                        <input type="hidden" name="goal_id" value="<?php echo (int)$goal['id']; ?>">
-                                        <input type="number" name="add_amount" min="0.01" step="0.01" placeholder="+ importe" required>
-                                        <button type="submit">Añadir</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                    <section class="finance-section">
+                        <h2>Metas de ahorro</h2>
+                        <?php if (empty($goals)): ?>
+                            <p>No tienes metas registradas.</p>
+                        <?php else: ?>
+                            <div class="goals-grid">
+                                <?php foreach ($goals as $goal): ?>
+                                    <?php
+                                        $goalTarget = (float)$goal['target_amount'];
+                                        $goalCurrent = (float)$goal['current_amount'];
+                                        $goalProgress = $goalTarget > 0 ? min(100, ($goalCurrent / $goalTarget) * 100) : 0;
+                                    ?>
+                                    <article class="goal-card">
+                                        <div class="goal-card-head">
+                                            <h3><?php echo htmlspecialchars($goal['name']); ?></h3>
+                                            <span class="goal-progress-label"><?php echo number_format($goalProgress, 2); ?>%</span>
+                                        </div>
+                                        <div class="goal-values-row">
+                                            <span>Actual: <?php echo number_format($goalCurrent, 2); ?></span>
+                                            <span>Objetivo: <?php echo number_format($goalTarget, 2); ?></span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: <?php echo number_format($goalProgress, 2, '.', ''); ?>%;"></div>
+                                        </div>
+                                        <form method="POST" action="" class="goal-progress-form">
+                                            <input type="hidden" name="action" value="add_goal_progress">
+                                            <input type="hidden" name="goal_id" value="<?php echo (int)$goal['id']; ?>">
+                                            <input type="number" name="add_amount" min="0.01" step="0.01" placeholder="+ importe" required>
+                                            <button type="submit">Añadir</button>
+                                        </form>
+                                    </article>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </section>
 
-            <h2>Últimas transacciones</h2>
-            <?php if (empty($transactions)): ?>
-                <p>No hay transacciones registradas todavía.</p>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Importe</th>
-                            <th>Categoría</th>
-                            <th>Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($transactions as $tx): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($tx['created_at']); ?></td>
-                                <td><?php echo htmlspecialchars($tx['type']); ?></td>
-                                <td><?php echo number_format((float)$tx['amount'], 2); ?></td>
-                                <td><?php echo htmlspecialchars($tx['display_category']); ?></td>
-                                <td><?php echo htmlspecialchars($tx['description'] ?? ''); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                    <section class="finance-section">
+                        <h2>Últimas transacciones</h2>
+                        <?php if (empty($transactions)): ?>
+                            <p>No hay transacciones registradas todavía.</p>
+                        <?php else: ?>
+                            <div class="table-scroll-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Importe</th>
+                                            <th>Categoría</th>
+                                            <th>Descripción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($transactions as $tx): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($tx['created_at']); ?></td>
+                                                <td><?php echo htmlspecialchars($tx['type']); ?></td>
+                                                <td><?php echo number_format((float)$tx['amount'], 2); ?></td>
+                                                <td><?php echo htmlspecialchars($tx['display_category']); ?></td>
+                                                <td><?php echo htmlspecialchars($tx['description'] ?? ''); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </section>
 
-            <!-- Comparador de monedas -->
-            <h2 class="mt-4 mb-2">Comparador de monedas</h2>
-            <div class="currency-comparator-block">
-                <div class="form-group">
-                    <label for="tx-selector">Selecciona una transacción:</label>
-                    <select id="tx-selector" class="tx-selector">
-                        <option value="">— Elige una transacción —</option>
-                        <?php foreach ($transactions as $tx): ?>
-                            <option value="<?php echo (int)$tx['id']; ?>" data-amount="<?php echo htmlspecialchars($tx['amount']); ?>" data-currency="<?php echo htmlspecialchars($finanzas['currency']); ?>">
-                                <?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?> - <?php echo htmlspecialchars($tx['description'] ?? $tx['display_category']); ?> (<?php echo number_format((float)$tx['amount'], 2); ?> <?php echo htmlspecialchars($finanzas['currency']); ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                    <section class="finance-section">
+                        <h2 class="mt-4 mb-2">Comparador de monedas</h2>
+                        <div class="currency-comparator-block">
+                            <div class="form-group">
+                                <label for="tx-selector">Selecciona una transacción:</label>
+                                <select id="tx-selector" class="tx-selector">
+                                    <option value="">— Elige una transacción —</option>
+                                    <?php foreach ($transactions as $tx): ?>
+                                        <option value="<?php echo (int)$tx['id']; ?>" data-amount="<?php echo htmlspecialchars($tx['amount']); ?>" data-currency="<?php echo htmlspecialchars($finanzas['currency']); ?>">
+                                            <?php echo htmlspecialchars(substr($tx['created_at'], 0, 10)); ?> - <?php echo htmlspecialchars($tx['description'] ?? $tx['display_category']); ?> (<?php echo number_format((float)$tx['amount'], 2); ?> <?php echo htmlspecialchars($finanzas['currency']); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
 
-                <div class="currency-comparator-info" id="comparator-info" style="display: none;">
-                    <div class="comparator-original">
-                        <p class="comparator-label">Monto original:</p>
-                        <p class="comparator-value">
-                            <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>
-                            <span id="original-amount">0.00</span>
-                            <span id="original-currency"><?php echo htmlspecialchars($finanzas['currency']); ?></span>
-                        </p>
-                    </div>
+                            <div class="currency-comparator-info" id="comparator-info" style="display: none;">
+                                <div class="comparator-original">
+                                    <p class="comparator-label">Monto original:</p>
+                                    <p class="comparator-value">
+                                        <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>
+                                        <span id="original-amount">0.00</span>
+                                        <span id="original-currency"><?php echo htmlspecialchars($finanzas['currency']); ?></span>
+                                    </p>
+                                </div>
 
-                    <div class="comparator-arrow">→</div>
+                                <div class="comparator-arrow">→</div>
 
-                    <div class="comparator-target">
-                        <label for="target-currency-select">Convertir a:</label>
-                        <select id="target-currency-select" class="target-currency-select">
-                            <option value="">— Elige moneda destino —</option>
-                            <?php foreach ($comparatorCurrencies as $curr): ?>
-                                <option value="<?php echo htmlspecialchars($curr['code']); ?>"><?php echo htmlspecialchars($curr['code']); ?> - <?php echo htmlspecialchars($curr['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                                <div class="comparator-target">
+                                    <label for="target-currency-select">Convertir a:</label>
+                                    <select id="target-currency-select" class="target-currency-select">
+                                        <option value="">— Elige moneda destino —</option>
+                                        <?php foreach ($comparatorCurrencies as $curr): ?>
+                                            <option value="<?php echo htmlspecialchars($curr['code']); ?>"><?php echo htmlspecialchars($curr['code']); ?> - <?php echo htmlspecialchars($curr['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-                    <div class="comparator-result" id="comparator-result" style="display: none;">
-                        <p class="comparator-label">Equivalente en:</p>
-                        <p class="comparator-value result-value">
-                            <span id="result-symbol">€</span>
-                            <span id="result-amount">0.00</span>
-                            <span id="result-currency">EUR</span>
-                        </p>
-                        <p class="comparator-rate" id="comparator-rate"></p>
-                    </div>
-                </div>
-            </div>
+                                <div class="comparator-result" id="comparator-result" style="display: none;">
+                                    <p class="comparator-label">Equivalente en:</p>
+                                    <p class="comparator-value result-value">
+                                        <span id="result-symbol">€</span>
+                                        <span id="result-amount">0.00</span>
+                                        <span id="result-currency">EUR</span>
+                                    </p>
+                                    <p class="comparator-rate" id="comparator-rate"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
-            <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo Excel</h2>
+                    <section class="finance-section">
+                        <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo Excel</h2>
 
-            <?php if (empty($excelUploads)): ?>
-                <p>No tienes archivos de Excel subidos aún.
-                   <a href="scripts/upload.php">Haz click aquí para subir uno</a> y vuelve aquí para analizarlo.</p>
-            <?php else: ?>
+                        <?php if (empty($excelUploads)): ?>
+                            <p>No tienes archivos de Excel subidos aún.
+                               <a href="scripts/upload.php">Haz click aquí para subir uno</a> y vuelve aquí para analizarlo.</p>
+                        <?php else: ?>
 
-                <div class="panel-form">
-                    <div class="form-group">
-                        <label for="aeFileSelect">Archivo a analizar</label>
-                        <select id="aeFileSelect">
-                            <option value="">— Elige un archivo —</option>
-                            <?php foreach ($excelUploads as $up): ?>
-                                <option value="<?php echo (int) $up['id']; ?>"<?php echo ($preloadId === (int)$up['id']) ? ' selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($up['filename']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button id="aeLoadBtn" class="btn" disabled>Cargar y analizar</button>
-                </div>
+                            <div class="panel-form section-surface">
+                                <div class="form-group">
+                                    <label for="aeFileSelect">Archivo a analizar</label>
+                                    <select id="aeFileSelect">
+                                        <option value="">— Elige un archivo —</option>
+                                        <?php foreach ($excelUploads as $up): ?>
+                                            <option value="<?php echo (int) $up['id']; ?>"<?php echo ($preloadId === (int)$up['id']) ? ' selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($up['filename']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button id="aeLoadBtn" class="btn" disabled>Cargar y analizar</button>
+                            </div>
 
-                <div class="ae-chart-types" id="aeChartTypes" style="display:none">
-                    <button class="ae-type-btn active" data-type="bar">Gráfico de barras</button>
-                    <button class="ae-type-btn"        data-type="pie">Gráfico de sectores</button>
-                    <button class="ae-type-btn"        data-type="line">Gráfico de líneas</button>
-                    <button class="ae-type-btn"        data-type="text">Texto simple</button>
-                </div>
+                            <div class="ae-chart-types" id="aeChartTypes" style="display:none">
+                                <button class="ae-type-btn active" data-type="bar">Gráfico de barras</button>
+                                <button class="ae-type-btn"        data-type="pie">Gráfico de sectores</button>
+                                <button class="ae-type-btn"        data-type="line">Gráfico de líneas</button>
+                                <button class="ae-type-btn"        data-type="text">Texto simple</button>
+                            </div>
 
-                <div class="ae-chart-area" id="aeChartArea">
-                    <p class="ae-msg">Selecciona un archivo y pulsa <strong>Cargar y analizar</strong>.</p>
-                </div>
+                            <div class="ae-chart-area" id="aeChartArea">
+                                <p class="ae-msg">Selecciona un archivo y pulsa <strong>Cargar y analizar</strong>.</p>
+                            </div>
 
-            <?php endif; ?>
+                        <?php endif; ?>
+            </section>
+
+            <section class="finance-section">
+                <h2 class="mt-4 mb-2">Nueva transacción</h2>
+                <form method="POST" action="" class="panel-form section-surface">
+                            <input type="hidden" name="action" value="add_transaction">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="amount">Importe</label>
+                                    <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category_id">Categoría</label>
+                                    <select id="category_id" name="category_id" required>
+                                        <option value="" selected disabled hidden></option>
+                                        <?php foreach ($expenseCategories as $cat): ?>
+                                            <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Descripción</label>
+                                <input id="description" name="description">
+                            </div>
+                            <button class="btn" type="submit">Guardar transacción</button>
+                </form>
+            </section>
+
+            <section class="finance-section">
+                <h2>Crear categoria</h2>
+                <form method="POST" action="" class="panel-form section-surface category-create-form">
+                            <input type="hidden" name="action" value="add_category">
+                            <div class="form-row">
+                                <div class="form-group no-margin">
+                                    <label for="category_name">Nombre</label>
+                                    <input id="category_name" name="category_name" required>
+                                </div>
+                                <button class="btn category-create-btn" type="submit">Crear</button>
+                            </div>
+                </form>
+            </section>
+
+            <section class="finance-section">
+                <h2>Crear meta de ahorro</h2>
+                <form method="POST" action="" class="panel-form section-surface">
+                            <input type="hidden" name="action" value="add_goal">
+                            <div class="form-group">
+                                <label for="goal_name">Nombre de la meta</label>
+                                <input id="goal_name" name="goal_name">
+                            </div>
+                            <div class="form-group">
+                                <label for="target_amount">Importe objetivo</label>
+                                <input id="target_amount" name="target_amount" type="number" min="0.01" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="target_date">Fecha objetivo</label>
+                                <input id="target_date" name="target_date" type="date">
+                            </div>
+                            <button class="btn" type="submit">Crear meta</button>
+                </form>
+            </section>
 
         <?php else: ?>
             <p>No hay información financiera. Contacta con soporte.</p>
@@ -841,13 +853,16 @@ try {
                 return;
             }
 
+            const hasCategoryData = points.some((p) => Math.abs(Number(p.value || 0)) > 0);
+            const chartHeight = hasCategoryData ? 190 : 57;
+
             // Mantener altura fija para evitar crecimiento acumulado del canvas.
             if (canvas.parentElement) {
-                canvas.parentElement.style.height = '190px';
-                canvas.parentElement.style.maxHeight = '190px';
+                canvas.parentElement.style.height = `${chartHeight}px`;
+                canvas.parentElement.style.maxHeight = `${chartHeight}px`;
             }
-            canvas.style.height = '190px';
-            canvas.style.maxHeight = '190px';
+            canvas.style.height = `${chartHeight}px`;
+            canvas.style.maxHeight = `${chartHeight}px`;
 
             const ctx = canvas.getContext('2d');
             categoryLineChart = new Chart(ctx, {

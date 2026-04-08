@@ -829,3 +829,196 @@ a:hover {
         font-size: 0.75rem;
     }
 }
+
+/* ============================================
+   DASHBOARD RESPONSIVE OVERRIDES
+   ============================================ */
+
+.finanzas-container {
+    width: min(95%, 1240px);
+    margin: 28px auto;
+}
+
+.finance-section {
+    margin-bottom: 24px;
+}
+
+.finance-section h2 {
+    margin-bottom: 12px;
+}
+
+.section-surface {
+    border-left: 3px solid #85B4FF;
+}
+
+.panel-form {
+    padding: 16px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+table input[type="number"] {
+    width: 100%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.no-margin {
+    margin-bottom: 0;
+}
+
+.category-create-form .form-row {
+    grid-template-columns: minmax(0, 1fr) 120px;
+    align-items: end;
+}
+
+.category-create-btn {
+    margin: 0;
+}
+
+.stat-box {
+    min-height: 124px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.table-scroll-wrap {
+    overflow-x: auto;
+    border-radius: 14px;
+}
+
+.table-scroll-wrap table {
+    min-width: 620px;
+    margin-bottom: 0;
+}
+
+.category-card {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-card:hover {
+    border-color: #bfdbfe;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.goal-card {
+    border: 1px solid #dbe1ea;
+    border-radius: 14px;
+    background: var(--color-surface);
+    padding: 14px;
+}
+
+.goal-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.goal-card-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0f172a;
+}
+
+.goal-progress-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.goal-values-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.goal-progress-form {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.goal-progress-form input[type="number"] {
+    width: 100%;
+}
+
+.chart-bar-wrap {
+    height: 16px;
+}
+
+@media (max-width: 768px) {
+    .finanzas-container {
+        width: 94%;
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .form-row,
+    .category-create-form .form-row,
+    .goal-progress-form {
+        grid-template-columns: 1fr;
+    }
+
+    .table-scroll-wrap table {
+        min-width: 560px;
+    }
+}
+
+@media (max-width: 480px) {
+    .finanzas-container {
+        width: 100%;
+        margin: 12px 0;
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .finance-section {
+        margin-bottom: 16px;
+    }
+
+    .panel-form {
+        padding: 12px;
+    }
+
+    .goal-card {
+        padding: 12px;
+    }
+}
+
+/* Compactar espacios vacios de graficos en la pantalla de finanzas */
+.finanzas-container .ae-chart-area {
+    min-height: 180px;
+}
+
+.finanzas-container .ae-msg {
+    padding: 28px 0;
+}
+
+.finanzas-container .ae-msg-error {
+    padding: 24px 0;
+}

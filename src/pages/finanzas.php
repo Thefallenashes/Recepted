@@ -473,9 +473,6 @@ try {
     ?>
 
     <div class="finanzas-container card">
-        <div class="card-header">
-            <h1>Finanzas</h1>
-        </div>
         <div class="card-body">
 
         <?php if ($mensaje): ?>
@@ -524,7 +521,7 @@ try {
                                         <button type="submit" class="tx-delete-btn" id="delete_selected_category_btn" disabled>Eliminar categoría</button>
                                     </form>
                                 </div>
-                                <div id="categoryLineChartWrap" class="category-chart-wrap">
+                                <div id="categoryLineChartWrap" class="category-chart-wrap" style="display: none;">
                                     <canvas id="categoryLineChart" height="57"></canvas>
                                 </div>
                             <?php endif; ?>
@@ -699,7 +696,7 @@ try {
                     </section>
 
                     <section class="finance-section">
-                        <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo Excel</h2>
+                        <h2 class="mt-4 mb-2" id="excel-analizar">Analizar archivo</h2>
 
                         <?php if (empty($excelUploads)): ?>
                             <p>No tienes archivos de Excel subidos aún.
@@ -728,9 +725,7 @@ try {
                                 <button class="ae-type-btn"        data-type="text">Texto simple</button>
                             </div>
 
-                            <div class="ae-chart-area" id="aeChartArea">
-                                <p class="ae-msg">Selecciona un archivo y pulsa <strong>Cargar y analizar</strong>.</p>
-                            </div>
+                            <div class="ae-chart-area" id="aeChartArea" style="display: none;"></div>
 
                         <?php endif; ?>
             </section>
@@ -850,7 +845,14 @@ try {
             }
 
             if (selector.value === '') {
+                if (chartWrap) {
+                    chartWrap.style.display = 'none';
+                }
                 return;
+            }
+
+            if (chartWrap) {
+                chartWrap.style.display = 'block';
             }
 
             const points = categorySeries[selector.value] || [{ label: 'Sin datos', value: 0 }];
@@ -1040,6 +1042,7 @@ try {
         if (!id) return;
 
         loadBtn.disabled = true;
+        chartArea.style.display = 'block';
         chartArea.innerHTML = '<p class="ae-msg">Cargando archivo…</p>';
 
         try {
@@ -1071,6 +1074,7 @@ try {
             renderView(analysedData, currentType);
 
         } catch (err) {
+            chartArea.style.display = 'block';
             chartArea.innerHTML = '<p class="ae-msg-error">⚠ ' + esc(err.message) + '</p>';
         } finally {
             loadBtn.disabled = false;
@@ -1219,6 +1223,7 @@ try {
     function renderView(sheetsData, type) {
         chartInstances.forEach(c => c.destroy());
         chartInstances = [];
+        chartArea.style.display = 'block';
         chartArea.innerHTML = '';
 
         const isMulti = sheetsData.length > 1;

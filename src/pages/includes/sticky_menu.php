@@ -65,6 +65,35 @@ if (!function_exists('render_sticky_menu')) {
                 'label' => $label,
             ];
         }
+
+        // Mostrar acceso al panel de usuario en todas las pantallas autenticadas,
+        // evitando duplicarlo cuando ya está presente en el menú.
+        $isAuthenticated = !empty($_SESSION['usuario_id']);
+        $hasUserPanelLink = false;
+        foreach ($filteredItems as $item) {
+            $candidateHref = trim((string)($item['href'] ?? ''));
+            if (preg_match('~(?:^|/)home\.php$~', $candidateHref)) {
+                $hasUserPanelLink = true;
+                break;
+            }
+        }
+
+        if ($isAuthenticated && !$hasUserPanelLink) {
+            $userPanelHref = 'home.php';
+            foreach ($filteredItems as $item) {
+                $candidateHref = trim((string)($item['href'] ?? ''));
+                if (strpos($candidateHref, '../') === 0) {
+                    $userPanelHref = '../home.php';
+                    break;
+                }
+            }
+
+            array_unshift($filteredItems, [
+                'href' => $userPanelHref,
+                'label' => 'Panel de usuario',
+            ]);
+        }
+
         $hasCollapsibleContent = !empty($filteredItems) || $showLogout;
         $collapseId = 'menuCollapse-' . substr(md5($containerClass . $innerClass . (string)count($filteredItems) . microtime(true)), 0, 8);
         $resolvedNavClass = trim(($navClass !== '' ? $navClass : 'sticky-links') . ' sticky-links navbar-collapse collapse');

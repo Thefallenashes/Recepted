@@ -18,22 +18,23 @@
     gap: 20px;
 }
 
-.content > section,
-.content > .card {
-    flex: 1;
+
+.home-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
 }
 
-/* Cards inside the grid stretch to fill row height */
-.content .grid {
-    align-items: stretch;
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.content .grid > .card {
-    height: 100%;
-}
-
-.content .grid > .card .card-body {
-    flex: 1;
+/* Transactions card can handle long lists without affecting sibling height */
+.transactions-card .card-body {
+    max-height: 420px;
     overflow-y: auto;
 }
 
@@ -215,6 +216,10 @@
 
     .content {
         margin-top: 16px;
+    }
+
+    .home-layout {
+        grid-template-columns: 1fr;
     }
 
     .card {

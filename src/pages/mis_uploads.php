@@ -307,7 +307,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
     ?>
 
     <div class="index-container">
-        <h1>Mis archivos</h1>
 
         <?php if ($mensaje): ?>
             <div class="mensaje <?php echo htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8'); ?>">

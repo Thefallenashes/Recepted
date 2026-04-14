@@ -87,7 +87,7 @@ try {
     <?php
     $landingNavItems = [];
     if ($cookie_activa || isset($_SESSION['usuario_id'])) {
-        $landingNavItems[] = ['href' => 'home.php', 'label' => 'Panel de control'];
+        $landingNavItems[] = ['href' => 'home.php', 'label' => 'Panel de usuario'];
     } else {
         $landingNavItems[] = ['href' => 'login.php', 'label' => 'Iniciar sesión'];
         $landingNavItems[] = ['href' => 'register.php', 'label' => 'Registrarse'];
@@ -96,7 +96,6 @@ try {
     render_sticky_menu([
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
-        'show_home' => false,
         'home_href' => 'landing.php',
         'show_logout' => isset($_SESSION['usuario_id']),
         'logout_href' => 'scripts/logout.php',
@@ -105,7 +104,6 @@ try {
     ?>
 
     <div class="index-container">
-        <h1>Recepted</h1>
         <?php if (!empty($mensaje_cookies)): ?>
             <p><?php echo htmlspecialchars($mensaje_cookies); ?></p>
         <?php endif; ?>

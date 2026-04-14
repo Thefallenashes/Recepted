@@ -109,7 +109,6 @@ try {
     ?>
 
     <div class="index-container">
-        <h1>Tickets de Soporte</h1>
 
         <?php if ($mensaje): ?>
             <div class="mensaje <?php echo htmlspecialchars($tipo); ?>"><?php echo $mensaje; ?></div>

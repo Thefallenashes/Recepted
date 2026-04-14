@@ -51,7 +51,6 @@ try {
     render_sticky_menu([
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
-        'nav_class' => 'navbar sticky-links',
         'home_href' => 'landing.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
@@ -76,20 +75,38 @@ try {
         </header>
 
         <main class="content">
-            <section class="grid grid-cols-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Información del Usuario</h2>
+            <section class="home-layout">
+                <div class="left-column">
+                    <div class="card user-info-card">
+                        <div class="card-header">
+                            <h2>Información del Usuario</h2>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Nombre:</strong> <?php echo htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidos']); ?></p>
+                            <p><strong>Correo:</strong> <?php echo htmlspecialchars($usuario['correo']); ?></p>
+                            <p><strong>Edad:</strong> <?php echo htmlspecialchars($usuario['edad']); ?> años</p>
+                            <p><strong>Miembro desde:</strong> <?php echo date('d/m/Y', strtotime($usuario['created_at'])); ?></p>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p><strong>Nombre:</strong> <?php echo htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidos']); ?></p>
-                        <p><strong>Correo:</strong> <?php echo htmlspecialchars($usuario['correo']); ?></p>
-                        <p><strong>Edad:</strong> <?php echo htmlspecialchars($usuario['edad']); ?> años</p>
-                        <p><strong>Miembro desde:</strong> <?php echo date('d/m/Y', strtotime($usuario['created_at'])); ?></p>
-                    </div>
+
+                    <section class="card files-card">
+                        <div class="card-header">
+                            <h2>Mis Archivos</h2>
+                        </div>
+                        <div class="card-body">
+                            <?php if (empty($uploads)): ?>
+                                <div class="text-center py-4">
+                                    <p class="mb-3">¡Comienza a analizar tus finanzas! Para comenzar sube y analiza tus archivos Excel</p>
+                                    <a href="mis_uploads.php" class="btn btn-primary">Ir a mis archivos →</a>
+                                </div>
+                            <?php else: ?>
+                                <p>Tienes <?php echo count($uploads); ?> archivo<?php echo count($uploads) !== 1 ? 's' : ''; ?> subido<?php echo count($uploads) !== 1 ? 's' : ''; ?>. <a href="mis_uploads.php" class="text-primary">Ver mis archivos</a></p>
+                            <?php endif; ?>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="card">
+                <div class="card transactions-card">
                     <div class="card-header">
                         <h2>Últimas transacciones</h2>
                     </div>
@@ -121,22 +138,6 @@ try {
                             <p class="text-muted">No hay transacciones registradas.</p>
                         <?php endif; ?>
                     </div>
-                </div>
-            </section>
-
-            <section class="card mt-4">
-                <div class="card-header">
-                    <h2>Mis Archivos</h2>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($uploads)): ?>
-                        <div class="text-center py-4">
-                            <p class="mb-3">¡Comienza a analizar tus finanzas! Para comenzar sube y analiza tus archivos Excel</p>
-                            <a href="mis_uploads.php" class="btn btn-primary">Ir a mis archivos →</a>
-                        </div>
-                    <?php else: ?>
-                        <p>Tienes <?php echo count($uploads); ?> archivo<?php echo count($uploads) !== 1 ? 's' : ''; ?> subido<?php echo count($uploads) !== 1 ? 's' : ''; ?>. <a href="mis_uploads.php" class="text-primary">Ver mis archivos</a></p>
-                    <?php endif; ?>
                 </div>
             </section>
         </main>

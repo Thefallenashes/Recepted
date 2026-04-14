@@ -85,7 +85,6 @@ try {
     ?>
 
     <div class="perfil-container">
-        <h1>Perfil de Usuario</h1>
 
         <?php if ($mensaje): ?>
             <div class="mensaje <?php echo $tipo; ?>"><?php echo $mensaje; ?></div>

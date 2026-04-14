@@ -695,6 +695,9 @@
 }
 
 .menu-bootstrap-nav {
+    position: sticky;
+    top: 0;
+    z-index: 1100;
     --bs-navbar-padding-y: 0;
     --bs-navbar-padding-x: 0;
     --menu-nav-height: 62px;
@@ -705,6 +708,7 @@
 .menu-bootstrap-nav .menu-bootstrap-nav-inner {
     border-radius: 0 !important;
     min-height: var(--menu-nav-height);
+    flex-wrap: nowrap !important;
     padding-top: 8px;
     padding-bottom: 8px;
     width: 100% !important;
@@ -780,6 +784,12 @@
         border-radius: 999px;
         min-height: auto;
         padding: 6px var(--menu-btn-px) !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .menu-bootstrap-nav .menu-bootstrap-nav-inner {
+        flex-wrap: wrap !important;
     }
 }
 

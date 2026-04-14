@@ -110,7 +110,6 @@ try {
     ?>
 
     <div class="index-container">
-        <h1>Índice</h1>
         <?php if (!empty($mensaje_cookies)): ?>
             <p><?php echo htmlspecialchars($mensaje_cookies); ?></p>
         <?php endif; ?>

@@ -1,14 +1,5 @@
 @import url('./components.css');
 
-.sticky-menu {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: #59CAE3;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(8px);
-}
-
 .sticky-menu-inner {
     width: 80%;
     margin: 0 auto;
@@ -75,13 +66,13 @@
     gap: 8px;
     border: 1px solid #dbe1ea;
     border-radius: 999px;
-    padding: 8px 14px;
+    padding: 9.9px 16px;
     color: #1e293b;
     text-decoration: none;
     font-weight: 700;
     background: var(--color-surface);
     box-shadow: none;
-    min-height: 40px;
+    min-height: 42px;
     line-height: 1;
     transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
@@ -151,14 +142,14 @@
 .sticky-links a {
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: 9.9px 16px;
     border-radius: 999px;
     background: var(--color-surface);
     border: 1px solid #dbe1ea;
     color: #1e293b;
     text-decoration: none;
     font-weight: 700;
-    min-height: 40px;
+    min-height: 42px;
     line-height: 1;
 }
 

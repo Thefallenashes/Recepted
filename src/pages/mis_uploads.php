@@ -402,7 +402,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
             </div>
         </div>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
     <script>
         (function() {
             'use strict';

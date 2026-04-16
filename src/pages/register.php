@@ -201,7 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p class="link-login">¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a></p>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
 

@@ -176,7 +176,6 @@ try {
             | <a href="home.php">Volver al inicio</a>
         </p>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>

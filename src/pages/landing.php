@@ -134,7 +134,6 @@ try {
             </ul>
         <?php endif; ?>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>

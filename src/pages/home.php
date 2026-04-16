@@ -142,8 +142,6 @@ try {
             </section>
         </main>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
-    <script src="../js/mobile-menu-enhancements.js" defer></script>
     <script src="../js/animation-manager.js" defer></script>
 </body>
 

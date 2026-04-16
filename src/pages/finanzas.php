@@ -800,8 +800,6 @@ try {
         </div>
     </div>
 
-    <script src="../js/sticky-menu-toggle.js" defer></script>
-    <script src="../js/mobile-menu-enhancements.js" defer></script>
     <script src="../js/animation-manager.js" defer></script>
     <script>
         window.__csrfToken = <?php echo json_encode(get_csrf_token(), JSON_UNESCAPED_UNICODE); ?>;

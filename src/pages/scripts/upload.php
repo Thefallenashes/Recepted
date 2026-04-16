@@ -159,7 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p><a href="../mis_uploads.php" class="btn">Ir a mis archivos</a></p>
     </div>
-    <script src="../../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
 

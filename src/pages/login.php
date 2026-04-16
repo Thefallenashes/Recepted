@@ -117,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p class="link-registro">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 </html>
 

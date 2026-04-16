@@ -246,7 +246,6 @@ try {
             <p><a href="admin_panel.php">Panel de administrador</a> | <a href="home.php">Volver al inicio</a></p>
         <?php endif; ?>
     </div>
-    <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>
 
 </html>

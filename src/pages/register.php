@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
     ?>
 
-    <div class="register-container">
+    <div class="register-container auth-container">
         <h1>Crear Cuenta</h1>
 
         <?php if ($mensaje): ?>
@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="">
+        <form method="POST" action="" class="auth-form">
             <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="correo">Correo Electrónico:</label>
@@ -191,15 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" required>
             </div>
 
-            <button type="submit" class="btn">Registrarse</button>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="remember" value="1" checked> Recuerdame
-                </label>
-            </div>
+            <button type="submit" class="btn auth-submit-btn">Registrarse</button>
         </form>
 
-        <p class="link-login">¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a></p>
+        <p class="link-login auth-helper-link">¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a></p>
     </div>
     <script src="../js/sticky-menu-toggle.js" defer></script>
 </body>

@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
     ?>
 
-    <div class="login-container">
+    <div class="login-container auth-container">
         <h1>Iniciar Sesión</h1>
 
         <?php if ($mensaje): ?>
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="">
+        <form method="POST" action="" class="auth-form">
             <?php echo csrf_input_field(); ?>
             <div class="form-group">
                 <label for="correo">Correo Electrónico:</label>
@@ -107,15 +107,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="password" id="contraseña" name="contraseña" required>
             </div>
 
-            <button type="submit" class="btn">Iniciar Sesión</button>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="remember" value="1" checked> Recuerdame
+            <div class="form-group auth-check-row">
+                <label class="auth-check-label" for="remember">
+                    <span>Recuerdame</span>
+                    <input class="auth-check-input" type="checkbox" id="remember" name="remember" value="1" checked>
                 </label>
             </div>
+
+            <button type="submit" class="btn auth-submit-btn">Iniciar Sesión</button>
         </form>
 
-        <p class="link-registro">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
+        <p class="link-registro auth-helper-link">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
     </div>
 </body>
 </html>

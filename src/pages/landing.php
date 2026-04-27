@@ -81,6 +81,111 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Landing</title>
     <link rel="stylesheet" href="../css/index.css">
+    <style>
+        :root {
+            --gold: #C9A84C;
+        }
+
+        .landing-sections-wrapper {
+            width: 100%;
+        }
+
+        /* Fila de sección: contiene el padding lateral */
+        .landing-section {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 6%;
+            overflow: hidden;
+        }
+
+        /* Inner: flex container con los bordes dorados */
+        .section-inner {
+            width: 100%;
+            display: flex;
+            align-items: stretch;
+            border-bottom: 4px solid var(--gold);
+        }
+
+        .landing-section:first-child .section-inner {
+            border-top: 4px solid var(--gold);
+        }
+
+        /* Texto: 60% desde el lado de entrada */
+        .section-content {
+            flex: 0 0 60%;
+            box-sizing: border-box;
+            padding: 101px 5%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-content h2 {
+            margin-bottom: 1rem;
+        }
+
+        /* Imagen: ocupa el espacio restante (40%) */
+        .section-image {
+            flex: 1 1 0;
+            min-height: 0;
+            background-color: #2a2a2a;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(201,168,76,0.08) 0px,
+                rgba(201,168,76,0.08) 1px,
+                transparent 1px,
+                transparent 12px
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            opacity: 0.6;
+        }
+
+        /* Orden: izquierda → contenido primero, imagen después */
+        .landing-section.from-left .section-content { order: 1; }
+        .landing-section.from-left .section-image   { order: 2; }
+
+        /* Orden: derecha → imagen primero, contenido después */
+        .landing-section.from-right .section-content { order: 2; }
+        .landing-section.from-right .section-image   { order: 1; }
+
+        /* La imagen dentro de from-right ocupa el side-inner correctamente */
+        .landing-section.from-right .section-inner { flex-direction: row; }
+
+        /* Animaciones: sólo el bloque de contenido se desplaza */
+        .fade-from-left {
+            opacity: 0;
+            transform: translateX(-120px);
+            transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .fade-from-right {
+            opacity: 0;
+            transform: translateX(120px);
+            transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .fade-from-left.is-visible,
+        .fade-from-right.is-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .landing-bottom-controls {
+            padding: 40px 10%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -103,7 +208,61 @@ try {
     ]);
     ?>
 
-    <div class="index-container">
+    <div class="landing-sections-wrapper">
+
+        <div class="landing-section from-left">
+            <div class="section-inner">
+                <div class="section-content fade-from-left">
+                    <h2>Título 1</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="section-image">imagen</div>
+            </div>
+        </div>
+
+        <div class="landing-section from-right">
+            <div class="section-inner">
+                <div class="section-content fade-from-right">
+                    <h2>Título 2</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="section-image">imagen</div>
+            </div>
+        </div>
+
+        <div class="landing-section from-left">
+            <div class="section-inner">
+                <div class="section-content fade-from-left">
+                    <h2>Título 3</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="section-image">imagen</div>
+            </div>
+        </div>
+
+        <div class="landing-section from-right">
+            <div class="section-inner">
+                <div class="section-content fade-from-right">
+                    <h2>Título 4</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="section-image">imagen</div>
+            </div>
+        </div>
+
+        <div class="landing-section from-left">
+            <div class="section-inner">
+                <div class="section-content fade-from-left">
+                    <h2>Título 5</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="section-image">imagen</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="landing-bottom-controls">
         <?php if (!empty($mensaje_cookies)): ?>
             <p><?php echo htmlspecialchars($mensaje_cookies); ?></p>
         <?php endif; ?>
@@ -134,6 +293,23 @@ try {
             </ul>
         <?php endif; ?>
     </div>
+
+    <script>
+        (function () {
+            const observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll('.section-content.fade-from-left, .section-content.fade-from-right').forEach(function (el) {
+                observer.observe(el);
+            });
+        })();
+    </script>
 </body>
 
 </html>

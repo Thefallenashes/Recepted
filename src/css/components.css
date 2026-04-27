@@ -1144,3 +1144,48 @@ body {
     .p-3 { padding: 8px !important; }
     .p-4 { padding: 12px !important; }
 }
+
+/* ============================================
+   NON-LANDING DIV SHAPE & SEPARATORS
+   Applies only to content containers, preserving UI control styling.
+   ============================================ */
+body:not(.landing-page) {
+    --color-gold-divider: #C9A84C;
+}
+
+body:not(.landing-page) div:is(
+    .card,
+    .stat-box,
+    .index-container,
+    .auth-container,
+    .login-container,
+    .register-container,
+    .home-container,
+    .content,
+    .left-column,
+    .perfil-container,
+    .config-container,
+    .finanzas-container,
+    .summary-card,
+    .panel-form,
+    .chart-list,
+    .category-card,
+    .config-section
+) {
+    border-radius: 0 !important;
+}
+
+body:not(.landing-page) :is(
+    .content,
+    .left-column,
+    .index-container,
+    .auth-container,
+    .login-container,
+    .register-container,
+    .perfil-container,
+    .config-container,
+    .finanzas-container,
+    .category-expenses-list
+) > div + div {
+    border-top: 2px solid var(--color-gold-divider);
+}

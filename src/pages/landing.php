@@ -188,7 +188,7 @@ try {
     </style>
 </head>
 
-<body>
+<body class="landing-page">
     <?php
     $landingNavItems = [];
     if ($cookie_activa || isset($_SESSION['usuario_id'])) {

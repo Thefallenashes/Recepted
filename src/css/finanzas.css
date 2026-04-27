@@ -242,22 +242,24 @@ table input[type="number"]:focus {
 
 .btn,
 button {
-    border: 1px solid #85B4FF;
+    border: 2px solid #9fb3d9 !important;
+    border-style: solid !important;
     cursor: pointer;
-    border-radius: 999px;
+    border-radius: 0;
     padding: 10px 20px;
     font-weight: 800;
     color: #ffffff;
     background: #3540E9;
-    box-shadow: 0 10px 20px rgba(53, 64, 233, 0.3);
+    box-shadow: none;
     transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .btn:hover,
 button:hover {
     background: #2A31C4;
+    border-color: #b8c7e6 !important;
     transform: translateY(-1px);
-    box-shadow: 0 14px 24px rgba(53, 64, 233, 0.5);
+    box-shadow: none;
 }
 
 .chart-list {
@@ -498,10 +500,11 @@ a:hover {
 
 .tx-delete-btn {
     background: #ff6b6b;
-    border: 1px solid #ff5252;
+    border: 2px solid #d9a3a3 !important;
+    border-style: solid !important;
     color: #ffffff;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 0;
     font-size: 0.8rem;
     cursor: pointer;
     font-weight: 600;
@@ -511,7 +514,8 @@ a:hover {
 
 .tx-delete-btn:hover {
     background: #ff5252;
-    box-shadow: 0 4px 8px rgba(255, 82, 82, 0.3);
+    border-color: #e3b3b3 !important;
+    box-shadow: none;
     transform: none;
 }
 
@@ -952,6 +956,12 @@ table input[type="number"] {
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
+    box-shadow: none;
+}
+
+.category-create-btn:hover,
+.category-create-btn:focus {
+    box-shadow: none;
 }
 
 .category-create-form .form-group {

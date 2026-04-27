@@ -6,6 +6,15 @@ get_csrf_token();
 enforce_csrf_protection('http403');
 
 /**
+ * Emite una redirección HTTP y termina la ejecución.
+ */
+function redirect(string $url): never
+{
+    header('Location: ' . $url);
+    exit();
+}
+
+/**
  * Exige sesión autenticada para scripts y devuelve el user_id actual.
  */
 function require_script_user(string $mode = 'redirect', string $redirectTo = '../login.php'): int

@@ -160,18 +160,6 @@
     font-weight: 600;
 }
 
-.mensaje.exito {
-    color: #065f46;
-    background: #d1fae5;
-    border: 1px solid #6ee7b7;
-}
-
-.mensaje.error {
-    color: #991b1b;
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
-}
-
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

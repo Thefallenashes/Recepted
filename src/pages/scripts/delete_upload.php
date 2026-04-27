@@ -4,22 +4,19 @@ require_once __DIR__ . '/script_bootstrap.php';
 $userId = require_script_user('redirect', '../login.php');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../mis_uploads.php');
-    exit();
+    redirect('../mis_uploads.php');
 }
 
 $id = intval($_POST['id'] ?? 0);
 if ($id <= 0) {
-    header('Location: ../mis_uploads.php');
-    exit();
+    redirect('../mis_uploads.php');
 }
 
 try {
     $pdo = getPDO();
     $row = get_accessible_upload($pdo, $id, $userId);
     if (!$row) {
-        header('Location: ../mis_uploads.php');
-        exit();
+        redirect('../mis_uploads.php');
     }
 
     // Borrar archivo físico
@@ -32,11 +29,8 @@ try {
     $stmt = $pdo->prepare('DELETE FROM uploads WHERE id = :id');
     $stmt->execute(['id' => $id]);
 
-    header('Location: ../mis_uploads.php');
-    exit();
+    redirect('../mis_uploads.php');
 } catch (PDOException $e) {
     error_log('Delete upload error: ' . $e->getMessage());
-    header('Location: ../mis_uploads.php');
-    exit();
+    redirect('../mis_uploads.php');
 }
-?>

@@ -12,6 +12,12 @@ if (!function_exists('render_sticky_menu')) {
             'container_class' => 'sticky-home-menu',
             'inner_class' => 'sticky-home-menu-inner',
             'image_base_path' => '../images',
+            'brand_image' => '',
+            'brand_alt' => 'Logo',
+            'brand_href' => '',
+            'brand_link_class' => 'navbar-brand',
+            'brand_image_class' => 'img-fluid',
+            'brand_image_style' => '',
             'home_href' => 'home.php',
             'home_label' => 'Inicio',
             'show_home' => true,
@@ -28,6 +34,12 @@ if (!function_exists('render_sticky_menu')) {
         $containerClass = (string)$config['container_class'];
         $innerClass = (string)$config['inner_class'];
         $imageBasePath = rtrim((string)$config['image_base_path'], '/');
+        $brandImage = trim((string)$config['brand_image']);
+        $brandAlt = trim((string)$config['brand_alt']);
+        $brandHref = trim((string)$config['brand_href']);
+        $brandLinkClass = trim((string)$config['brand_link_class']);
+        $brandImageClass = trim((string)$config['brand_image_class']);
+        $brandImageStyle = trim((string)$config['brand_image_style']);
         $homeHref = (string)$config['home_href'];
         $homeLabel = (string)$config['home_label'];
         $showHome = (bool)$config['show_home'];
@@ -39,6 +51,10 @@ if (!function_exists('render_sticky_menu')) {
 
         $homeIcon = $imageBasePath . '/Home.PNG';
         $logoutIcon = $imageBasePath . '/BotonLogOut.PNG';
+        $resolvedBrandHref = $brandHref !== '' ? $brandHref : $homeHref;
+        $resolvedBrandAlt = $brandAlt !== '' ? $brandAlt : 'Logo';
+        $resolvedBrandLinkClass = $brandLinkClass !== '' ? $brandLinkClass : 'navbar-brand';
+        $resolvedBrandImageClass = $brandImageClass !== '' ? $brandImageClass : 'img-fluid';
 
         static $bootstrapJsInjected = false;
 
@@ -104,6 +120,12 @@ if (!function_exists('render_sticky_menu')) {
                     <a class="menu-icon-btn navbar-brand" href="<?php echo htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Inicio">
                         <img src="<?php echo htmlspecialchars($homeIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="Inicio" class="icon-home">
                         <span><?php echo htmlspecialchars($homeLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($brandImage !== ''): ?>
+                    <a class="<?php echo htmlspecialchars($resolvedBrandLinkClass, ENT_QUOTES, 'UTF-8'); ?>" href="<?php echo htmlspecialchars($resolvedBrandHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($resolvedBrandAlt, ENT_QUOTES, 'UTF-8'); ?>">
+                        <img src="<?php echo htmlspecialchars($brandImage, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($resolvedBrandAlt, ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo htmlspecialchars($resolvedBrandImageClass, ENT_QUOTES, 'UTF-8'); ?>"<?php if ($brandImageStyle !== ''): ?> style="<?php echo htmlspecialchars($brandImageStyle, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
                     </a>
                 <?php endif; ?>
 

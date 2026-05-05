@@ -8,6 +8,8 @@ $mensaje_debug   = handle_debug_mode_request('landing.php');
 $cookie_activa = !empty($_COOKIE['remember']);
 $rol_sesion    = strtolower(trim((string)($_SESSION['usuario_rol'] ?? '')));
 $debug_activo  = !empty($_SESSION['debug_mode']) || !empty($_SESSION['is_superadmin']) || $rol_sesion === 'superadmin';
+$usuario_autenticado = $cookie_activa || isset($_SESSION['usuario_id']);
+$hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
 
 $paginas_debug = build_debug_pages_list($debug_activo, __DIR__);
 
@@ -31,6 +33,100 @@ try {
     <style>
         :root {
             --gold: #C9A84C;
+            --brand-green: #0b8f97;
+            --brand-green-dark: #0a7379;
+        }
+
+        body.landing-page {
+            margin: 0;
+        }
+
+        .landing-hero {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%);
+        }
+
+        .landing-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(201, 168, 76, 0.24), transparent 58%);
+        }
+
+        .landing-hero-overlay {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 96px 6%;
+            color: #f8fafc;
+        }
+
+        .landing-hero-copy {
+            max-width: 580px;
+            text-align: left;
+            margin-left: auto;
+            transform: translateY(-8vh);
+        }
+
+        .landing-hero-copy h1 {
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .landing-hero-copy p {
+            margin: 0 0 2rem;
+            font-size: clamp(1rem, 1.8vw, 1.25rem);
+            line-height: 1.6;
+            color: rgba(248, 250, 252, 0.88);
+        }
+
+        .landing-hero-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 56px;
+            padding: 0 28px;
+            border-radius: 12px;
+            background: var(--brand-green);
+            border: 1px solid var(--brand-green);
+            color: #f8fafc;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 16px 30px rgba(11, 143, 151, 0.28);
+            transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+        }
+
+        .landing-hero-cta:hover {
+            background: var(--brand-green-dark);
+            border-color: var(--brand-green-dark);
+            color: #f8fafc;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .landing-hero-visual {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .landing-hero-image-frame {
+            width: min(100%, 520px);
+            padding: 32px;
+            background: transparent;
+            transform: translateY(-8vh);
+        }
+
+        .landing-hero-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
         }
 
         .landing-sections-wrapper {
@@ -132,6 +228,33 @@ try {
             align-items: center;
             gap: 10px;
         }
+
+        @media (max-width: 768px) {
+            .landing-hero-overlay {
+                padding: 80px 10%;
+            }
+
+            .landing-hero-copy {
+                text-align: center;
+                max-width: none;
+                margin-left: 0;
+                transform: translateY(-8vh);
+            }
+
+            .landing-hero-cta {
+                width: 100%;
+            }
+
+            .landing-hero-image-frame {
+                width: min(100%, 380px);
+                padding: 24px;
+                transform: translateY(-8vh);
+            }
+
+            .landing-hero-visual {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 
@@ -149,17 +272,32 @@ try {
         'container_class' => 'sticky-home-menu',
         'inner_class' => 'sticky-home-menu-inner',
         'home_href' => 'landing.php',
-        'brand_image' => '../images/logo_pagina.png',
-        'brand_alt' => 'Logo principal',
-        'brand_href' => 'landing.php',
-        'brand_link_class' => 'navbar-brand position-absolute top-50 start-50 translate-middle d-flex align-items-center justify-content-center h-100 m-0 p-0',
-        'brand_image_class' => 'img-fluid h-100',
-        'brand_image_style' => 'height: 80%; width: auto; object-fit: contain;',
         'show_logout' => isset($_SESSION['usuario_id']),
         'logout_href' => 'scripts/logout.php',
         'nav_items' => $landingNavItems,
     ]);
     ?>
+
+    <div class="landing-hero container-fluid px-0">
+        <div class="landing-hero-overlay container-fluid">
+            <div class="row align-items-center justify-content-between min-vh-100 gx-5 gy-5">
+                <div class="col-12 col-lg-6">
+                    <div class="landing-hero-copy">
+                        <h1>Recepted</h1>
+                        <p>Controla tus ingresos, organiza tus archivos y toma decisiones con una vista clara de tus finanzas desde el primer momento.</p>
+                        <a href="<?php echo htmlspecialchars($hero_cta_href, ENT_QUOTES, 'UTF-8'); ?>" class="landing-hero-cta">¡Comienza a mejorar tus finanzas!</a>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-5">
+                    <div class="landing-hero-visual">
+                        <div class="landing-hero-image-frame">
+                            <img src="../images/logo_pagina.png" alt="Logo de Recepted" class="landing-hero-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="landing-sections-wrapper">
 

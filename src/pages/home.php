@@ -142,7 +142,6 @@ try {
             </section>
         </main>
     </div>
-    <script src="../js/animation-manager.js" defer></script>
 </body>
 
 </html>

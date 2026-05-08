@@ -15,7 +15,6 @@ DEPENDENCIAS
 - src/pages/includes/sticky_menu.php       → render_sticky_menu()
 - src/utils/db.php                         → getPDO()
 - src/css/index.css                        → estilos de la vista
-- src/js/sticky-menu-toggle.js             → comportamiento del menú
 
 
 CONFIGURACIÓN

@@ -55,11 +55,11 @@ Estos colores definen la identidad visual de Recepted y aparecen en los elemento
 
 *Paleta del sistema de navegación*
 
-| Cyan principal | `#59CAE3` | Fondo del menú de navegación fijo (*sticky*) |
-| Teal — *hover* | `#0b8f97` | Texto y borde en *hover* de botones del menú |
-| Fondo *hover* de menú | `#f0fdfa` | Fondo suave en interacción con el menú |
-| Borde *hover* de menú | `#99f6e4` | Borde verde azulado en *hover* de navegación |
-| Borde de botones en reposo | `#dbe1ea` | Borde gris perla de botones de menú sin interacción |
+| Fondo principal del *navbar* (Bootstrap *dark*) | `#212529` | Fondo visible del *navbar* en su estado base |
+| Texto base del *navbar* | `#f8f9fa` | Texto e iconografía en enlaces y botones del *navbar* |
+| Texto en *hover* del *navbar* | `#ffffff` | Color de texto en interacción (*hover*/*focus*) |
+| Fondo *hover* de navegación | `rgba(255, 255, 255, 0.15)` | Fondo semitransparente en enlaces y botones del *navbar* |
+| Borde del botón hamburguesa | `rgba(255, 255, 255, 0.5)` | Borde del control `navbar-toggler` en estado base |
 
 #### 2.3. Acento Verde Lateral
 
@@ -317,15 +317,12 @@ A continuación se presentan las definiciones CSS base de los componentes princi
 .alert-warning { background: #FFF3E0; border-left: 4px solid #FFC107; }
 ```
 
-### 6.5. Menú de Navegación Fijo
+### 6.5. *Navbar* de Bootstrap
 
 ```css
-.sticky-menu {
-  background: #59CAE3;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(8px);
+.navbar {
+  background: #212529;
+  z-index: 1100;
   min-height: 64px;
 }
 ```
@@ -343,7 +340,7 @@ A continuación se presentan las definiciones CSS base de los componentes princi
 | *Input* estándar | *Padding* / altura | 10px 14px / 40 – 44 px |
 | Tarjeta | *Padding* / radio | 20px / 12px |
 | Contenedor | Ancho / *padding* | 80 % / 26 – 36px |
-| Menú *sticky* | Altura mínima | 64 px |
+| *Navbar* de Bootstrap | Altura mínima | 64 px |
 | Alerta | *Padding* / borde | 14px 16px / 4px |
 
 ---
@@ -409,7 +406,7 @@ Con el fin de garantizar la coherencia y la mantenibilidad del sistema, se estab
 
 | `src/css/shared.css` | Variables y *tokens* globales del sistema |
 | `src/css/components.css` | Botones, tarjetas, formularios y alertas |
-| `src/css/index.css` | Navegación fija y contenedor estándar |
+| `src/css/index.css` | *Navbar* de Bootstrap y contenedor estándar |
 | `src/css/animations.css` | Transiciones y *keyframes* |
 | `src/css/viewport.css` | Diseño adaptativo y accesibilidad |
 

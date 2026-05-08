@@ -75,3 +75,73 @@ function resolve_upload_realpath(string $relativePath): ?string
 
     return $realFile;
 }
+
+/**
+ * Envía un archivo binario de forma segura evitando contaminación de buffers.
+ */
+function send_binary_file_response(string $filePath, string $contentType = 'application/octet-stream', ?string $downloadName = null, bool $asAttachment = true): never
+{
+    if (!is_file($filePath) || !is_readable($filePath)) {
+        http_response_code(404);
+        exit('Archivo no encontrado.');
+    }
+
+    $size = filesize($filePath);
+    if (!is_int($size) || $size < 0) {
+        http_response_code(500);
+        exit('No se pudo determinar el tamaño del archivo.');
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    if (function_exists('session_write_close')) {
+        @session_write_close();
+    }
+
+    @ini_set('zlib.output_compression', '0');
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+    }
+
+    if (headers_sent()) {
+        http_response_code(500);
+        exit('No se pudieron enviar cabeceras de descarga.');
+    }
+
+    $dispositionType = $asAttachment ? 'attachment' : 'inline';
+    $safeName = null;
+    $encodedName = null;
+
+    if (is_string($downloadName) && $downloadName !== '') {
+        $baseName = basename($downloadName);
+        $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $baseName);
+        if (!is_string($safeName) || $safeName === '') {
+            $safeName = 'archivo';
+        }
+        $encodedName = rawurlencode($baseName);
+    }
+
+    header('Content-Description: File Transfer');
+    header('Content-Type: ' . $contentType);
+    if ($safeName !== null && $encodedName !== null) {
+        header('Content-Disposition: ' . $dispositionType . '; filename="' . $safeName . '"; filename*=UTF-8\'\'' . $encodedName);
+    } else {
+        header('Content-Disposition: ' . $dispositionType);
+    }
+    header('Content-Transfer-Encoding: binary');
+    header('X-Content-Type-Options: nosniff');
+    header('Expires: 0');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: public');
+    header('Content-Length: ' . $size);
+
+    if (readfile($filePath) === false) {
+        error_log('send_binary_file_response readfile failed: ' . $filePath);
+        http_response_code(500);
+        exit('Error al enviar el archivo.');
+    }
+
+    exit();
+}

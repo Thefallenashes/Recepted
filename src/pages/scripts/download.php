@@ -27,29 +27,11 @@ try {
     }
 
     $originalName = (string)($row['filename'] ?? 'archivo');
-    $basename = basename($originalName);
-    $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $basename);
-    if (!is_string($safeName) || $safeName === '') {
-        $safeName = 'archivo';
-    }
-
-    header('Content-Description: File Transfer');
-    header('Content-Type: ' . ($row['mime'] ?: 'application/octet-stream'));
-    header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode($basename));
-    header('X-Content-Type-Options: nosniff');
-    header('Expires: 0');
-    header('Cache-Control: must-revalidate');
-    header('Pragma: public');
-    header('Content-Length: ' . filesize($file));
-
-    // Limpiar buffers
-    flush();
-    readfile($file);
-    exit();
+    $mime = (string)($row['mime'] ?: 'application/octet-stream');
+    send_binary_file_response($file, $mime, $originalName, true);
 } catch (PDOException $e) {
     http_response_code(500);
     echo 'Error al procesar la descarga.';
     error_log('Download error: ' . $e->getMessage());
     exit();
 }
-?>

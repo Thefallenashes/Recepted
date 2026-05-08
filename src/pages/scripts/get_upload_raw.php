@@ -36,13 +36,7 @@ try {
         exit('Archivo físico no encontrado.');
     }
 
-    header('Content-Type: application/octet-stream');
-    header('Content-Length: ' . filesize($realFile));
-    header('Cache-Control: no-store, no-cache, must-revalidate');
-    header('X-Content-Type-Options: nosniff');
-    flush();
-    readfile($realFile);
-    exit();
+    send_binary_file_response($realFile, 'application/octet-stream', null, false);
 
 } catch (PDOException $e) {
     error_log('get_upload_raw error: ' . $e->getMessage());

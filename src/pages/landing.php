@@ -183,10 +183,14 @@ try {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--gold);
-            font-size: 0.85rem;
-            letter-spacing: 0.08em;
-            opacity: 0.6;
+            overflow: hidden;
+        }
+
+        .section-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         /* Orden: izquierda → contenido primero, imagen después */
@@ -304,8 +308,32 @@ try {
         <div class="landing-section from-left">
             <div class="section-inner">
                 <div class="section-content fade-from-left">
-                    <h2>Título 1</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                    <h2>Resumen instantáneo</h2>
+                    <p>Tu situación financiera en una vista: saldo, tendencias y progreso de ahorro al momento.</p>
+                </div>
+                <div class="section-image">
+                    <img src="../images/primeraImagen.png" alt="Resumen financiero instantáneo">
+                </div>
+            </div>
+        </div>
+
+        <div class="landing-section from-right">
+            <div class="section-inner">
+                <div class="section-content fade-from-right">
+                    <h2>Seguridad y confianza</h2>
+                    <p>Autenticación multifactor y privacidad transparente: tus datos están seguros con nosotros.</p>
+                </div>
+                <div class="section-image">
+                    <img src="../images/segundaImagen.png" alt="Seguridad y confianza de datos">
+                </div>
+            </div>
+        </div>
+
+        <div class="landing-section from-left">
+            <div class="section-inner">
+                <div class="section-content fade-from-left">
+                    <h2>Categorización automática</h2>
+                    <p>¡Clasifica tus gastos al instante y visualiza tu progreso en un instante!.</p>
                 </div>
                 <div class="section-image">imagen</div>
             </div>
@@ -314,8 +342,8 @@ try {
         <div class="landing-section from-right">
             <div class="section-inner">
                 <div class="section-content fade-from-right">
-                    <h2>Título 2</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                    <h2>Metas y retos que funcionan</h2>
+                    <p>Fija metas y progresa para ganar recompensas por cumplir tus objetivos.</p>
                 </div>
                 <div class="section-image">imagen</div>
             </div>
@@ -324,28 +352,8 @@ try {
         <div class="landing-section from-left">
             <div class="section-inner">
                 <div class="section-content fade-from-left">
-                    <h2>Título 3</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                </div>
-                <div class="section-image">imagen</div>
-            </div>
-        </div>
-
-        <div class="landing-section from-right">
-            <div class="section-inner">
-                <div class="section-content fade-from-right">
-                    <h2>Título 4</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                </div>
-                <div class="section-image">imagen</div>
-            </div>
-        </div>
-
-        <div class="landing-section from-left">
-            <div class="section-inner">
-                <div class="section-content fade-from-left">
-                    <h2>Título 5</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                    <h2>Planes claros y económicos</h2>
+                    <p>¡Pruebalo gratis! , Si decides que quieres continuar utilizando nuestros servicios podrás subscribirte desde 4,99 €/mes con funciones avanzadas y descuento para estudiantes.</p>
                 </div>
                 <div class="section-image">imagen</div>
             </div>

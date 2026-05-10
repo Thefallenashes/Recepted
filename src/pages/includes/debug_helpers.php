@@ -100,3 +100,44 @@ function build_debug_pages_list(bool $debugActivo, string $pagesDir, array $excl
 
     return $pages;
 }
+
+/**
+ * Builds shared page context used by landing/index debug controls.
+ *
+ * @param string[] $excludedPages
+ * @return array{
+ *   mensaje_cookies: string,
+ *   mensaje_debug: string,
+ *   debug_activo: bool,
+ *   paginas_debug: array<int, array{nombre: string, requiere_parametro: bool}>,
+ *   total_users: int,
+ *   total_uploads: int
+ * }
+ */
+function build_debug_page_context(string $selfPage, string $pagesDir, array $excludedPages = []): array
+{
+    $mensaje_cookies = handle_clear_cookies_request($selfPage) ?: resolve_cookies_cleared_message();
+    $mensaje_debug = handle_debug_mode_request($selfPage);
+
+    $rol_sesion = strtolower(trim((string)($_SESSION['usuario_rol'] ?? '')));
+    $debug_activo = !empty($_SESSION['debug_mode']) || !empty($_SESSION['is_superadmin']) || $rol_sesion === 'superadmin';
+    $paginas_debug = build_debug_pages_list($debug_activo, $pagesDir, $excludedPages);
+
+    try {
+        $pdo = getPDO();
+        $total_users = fetch_total_users($pdo);
+        $total_uploads = fetch_total_uploads($pdo);
+    } catch (PDOException $e) {
+        $total_users = 0;
+        $total_uploads = 0;
+    }
+
+    return [
+        'mensaje_cookies' => $mensaje_cookies,
+        'mensaje_debug' => $mensaje_debug,
+        'debug_activo' => $debug_activo,
+        'paginas_debug' => $paginas_debug,
+        'total_users' => $total_users,
+        'total_uploads' => $total_uploads,
+    ];
+}

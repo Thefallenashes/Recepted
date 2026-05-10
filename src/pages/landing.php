@@ -2,25 +2,17 @@
 require_once __DIR__ . '/includes/page_bootstrap.php';
 require_once __DIR__ . '/includes/debug_helpers.php';
 
-$mensaje_cookies = handle_clear_cookies_request('landing.php') ?: resolve_cookies_cleared_message();
-$mensaje_debug   = handle_debug_mode_request('landing.php');
+$debug_context = build_debug_page_context('landing.php', __DIR__);
+$mensaje_cookies = $debug_context['mensaje_cookies'];
+$mensaje_debug = $debug_context['mensaje_debug'];
+$debug_activo = $debug_context['debug_activo'];
+$paginas_debug = $debug_context['paginas_debug'];
+$total_users = $debug_context['total_users'];
+$total_uploads = $debug_context['total_uploads'];
 
 $cookie_activa = !empty($_COOKIE['remember']);
-$rol_sesion    = strtolower(trim((string)($_SESSION['usuario_rol'] ?? '')));
-$debug_activo  = !empty($_SESSION['debug_mode']) || !empty($_SESSION['is_superadmin']) || $rol_sesion === 'superadmin';
 $usuario_autenticado = $cookie_activa || isset($_SESSION['usuario_id']);
 $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
-
-$paginas_debug = build_debug_pages_list($debug_activo, __DIR__);
-
-try {
-    $pdo = getPDO();
-    $total_users = fetch_total_users($pdo);
-    $total_uploads = fetch_total_uploads($pdo);
-} catch (PDOException $e) {
-    $total_users = 0;
-    $total_uploads = 0;
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">

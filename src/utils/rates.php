@@ -125,46 +125,6 @@ if (!function_exists('get_supported_currencies')) {
     }
 }
 
-if (!function_exists('forex_historical_rates')) {
-    /**
-     * Get historical exchange rates for a specific date
-     * 
-     * @param string $date Date in format YYYY-MM-DD
-     * @param string $from Source currency code
-     * @param string $to Target currency code
-     * @return float|null Historical exchange rate or null on failure
-     */
-    function forex_historical_rates(string $date, string $from, string $to): ?float {
-        if ($from === $to) {
-            return 1.0;
-        }
-
-        try {
-            $url = "https://api.frankfurter.app/{$date}?from={$from}&to={$to}";
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 5
-                ]
-            ]);
-
-            $response = @file_get_contents($url, false, $context);
-            if (!$response) {
-                return null;
-            }
-
-            $data = json_decode($response, true);
-            if (!isset($data['rates'][$to])) {
-                return null;
-            }
-
-            return (float)$data['rates'][$to];
-        } catch (Exception $e) {
-            error_log('Frankfurter historical rates error: ' . $e->getMessage());
-            return null;
-        }
-    }
-}
-
 if (!function_exists('clear_rates_cache')) {
     /**
      * Clear all cached exchange rates

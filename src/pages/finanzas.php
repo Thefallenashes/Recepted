@@ -799,8 +799,6 @@ try {
         <?php endif; ?>
         </div>
     </div>
-
-    <script src="../js/animation-manager.js" defer></script>
     <script>
         window.__csrfToken = <?php echo json_encode(get_csrf_token(), JSON_UNESCAPED_UNICODE); ?>;
     </script>

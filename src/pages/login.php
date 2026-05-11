@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group auth-check-row">
                 <label class="auth-check-label" for="remember">
-                    <span>Recuerdame</span>
+                    <span>Mantener mi sesión iniciada</span>
                     <input class="auth-check-input" type="checkbox" id="remember" name="remember" value="1" checked>
                 </label>
             </div>

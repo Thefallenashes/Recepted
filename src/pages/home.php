@@ -1,22 +1,13 @@
 ﻿<?php
 require_once __DIR__ . '/includes/page_bootstrap.php';
+require_once __DIR__ . '/includes/debug_helpers.php';
 require_once __DIR__ . '/../utils/currencies.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
-    try {
-        $pdo = getPDO();
-        if (function_exists('login_as_debug')) {
-            login_as_debug($pdo);
-            if (function_exists('record_audit_log')) {
-                record_audit_log($pdo, 'debug_mode_enabled', 'warning', 'Activado desde home.php');
-            }
-            header('Location: index.php');
-            exit();
-        }
-    } catch (Exception $e) {
-        error_log('Error en debug guest home: ' . $e->getMessage());
-    }
-}
+$mensaje_debug = handle_debug_mode_request('home.php');
+$puede_activar_debug = empty($_SESSION['usuario_id'])
+    || is_admin_user()
+    || is_superadmin_user()
+    || !empty($_SESSION['debug_mode']);
 
 // Verificar si el usuario está autenticado
 $userId = require_authenticated_user('login.php');
@@ -67,11 +58,18 @@ try {
         <header class="card mb-4">
             <div class="card-header">
                 <h1>Bienvenido, <?php echo htmlspecialchars($usuario['nombre']); ?></h1>
-                <form method="POST" action="">
-                    <?php echo csrf_input_field(); ?>
-                    <button type="submit" name="debug" value="1" class="btn btn-sm btn-secondary">Modo desarrollo</button>
-                </form>
+                <?php if ($puede_activar_debug): ?>
+                    <form method="POST" action="">
+                        <?php echo csrf_input_field(); ?>
+                        <button type="submit" name="debug" value="1" class="btn btn-sm btn-secondary">Modo desarrollo</button>
+                    </form>
+                <?php endif; ?>
             </div>
+            <?php if (!empty($mensaje_debug)): ?>
+                <div class="card-body">
+                    <p><?php echo htmlspecialchars($mensaje_debug); ?></p>
+                </div>
+            <?php endif; ?>
         </header>
 
         <main class="content">

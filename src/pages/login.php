@@ -1,5 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/includes/auth_bootstrap.php';
+require_once __DIR__ . '/includes/debug_helpers.php';
 require_once __DIR__ . '/includes/sticky_menu.php';
 
 $mensaje = '';
@@ -12,7 +13,10 @@ if (isset($_SESSION['usuario_id'])) {
 }
 
 // Procesar el formulario cuando se envíe
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
+    $mensaje = handle_debug_mode_request('login.php');
+    $tipo_mensaje = $mensaje !== '' ? 'error' : '';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correo = trim($_POST['correo'] ?? '');
     $contraseña = $_POST['contraseña'] ?? '';
 
@@ -115,6 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <button type="submit" class="btn auth-submit-btn">Iniciar Sesión</button>
+        </form>
+
+        <form method="POST" action="" class="auth-form">
+            <?php echo csrf_input_field(); ?>
+            <button type="submit" name="debug" value="1" class="btn auth-submit-btn">Modo de desarollo</button>
         </form>
 
         <p class="link-registro auth-helper-link">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>

@@ -11,6 +11,7 @@ $debug_context = build_debug_page_context(
 );
 $mensaje_cookies = $debug_context['mensaje_cookies'];
 $mensaje_debug = $debug_context['mensaje_debug'];
+$puede_activar_debug = $debug_context['puede_activar_debug'];
 $debug_activo = $debug_context['debug_activo'];
 $paginas_debug = $debug_context['paginas_debug'];
 $total_users = $debug_context['total_users'];
@@ -53,10 +54,12 @@ $total_uploads = $debug_context['total_uploads'];
         <?php endif; ?>
         <p>Usuarios registrados: <?php echo (int)$total_users; ?></p>
         <p>Archivos subidos: <?php echo (int)$total_uploads; ?></p>
-        <form method="POST" action="">
-            <?php echo csrf_input_field(); ?>
-            <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
-        </form>
+        <?php if ($puede_activar_debug): ?>
+            <form method="POST" action="">
+                <?php echo csrf_input_field(); ?>
+                <button type="submit" name="debug" value="1" class="btn">Modo de desarollo</button>
+            </form>
+        <?php endif; ?>
         <form method="POST" action="">
             <?php echo csrf_input_field(); ?>
             <button type="submit" name="clear_cookies" value="1" class="btn">Borrar cookies</button>

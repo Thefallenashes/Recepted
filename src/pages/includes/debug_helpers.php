@@ -24,6 +24,15 @@ function handle_clear_cookies_request(string $selfPage): string
     }
 }
 
+function can_access_debug_mode(): bool
+{
+    if (empty($_SESSION['usuario_id'])) {
+        return true;
+    }
+
+    return is_admin_user() || is_superadmin_user() || !empty($_SESSION['debug_mode']);
+}
+
 /**
  * Handles the "debug mode" POST action.
  * Redirects to index.php on success, returns error string on failure.
@@ -33,6 +42,10 @@ function handle_debug_mode_request(string $sourcePage): string
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['debug'])) {
         return '';
+    }
+
+    if (!can_access_debug_mode()) {
+        return 'Solo administradores o superadministradores pueden activar el modo debug desde una cuenta autenticada.';
     }
 
     try {
@@ -108,6 +121,7 @@ function build_debug_pages_list(bool $debugActivo, string $pagesDir, array $excl
  * @return array{
  *   mensaje_cookies: string,
  *   mensaje_debug: string,
+ *   puede_activar_debug: bool,
  *   debug_activo: bool,
  *   paginas_debug: array<int, array{nombre: string, requiere_parametro: bool}>,
  *   total_users: int,
@@ -118,6 +132,7 @@ function build_debug_page_context(string $selfPage, string $pagesDir, array $exc
 {
     $mensaje_cookies = handle_clear_cookies_request($selfPage) ?: resolve_cookies_cleared_message();
     $mensaje_debug = handle_debug_mode_request($selfPage);
+    $puede_activar_debug = can_access_debug_mode();
 
     $rol_sesion = strtolower(trim((string)($_SESSION['usuario_rol'] ?? '')));
     $debug_activo = !empty($_SESSION['debug_mode']) || !empty($_SESSION['is_superadmin']) || $rol_sesion === 'superadmin';
@@ -135,6 +150,7 @@ function build_debug_page_context(string $selfPage, string $pagesDir, array $exc
     return [
         'mensaje_cookies' => $mensaje_cookies,
         'mensaje_debug' => $mensaje_debug,
+        'puede_activar_debug' => $puede_activar_debug,
         'debug_activo' => $debug_activo,
         'paginas_debug' => $paginas_debug,
         'total_users' => $total_users,

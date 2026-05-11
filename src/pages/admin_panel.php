@@ -50,6 +50,49 @@ try {
         }
     }
 
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) {
+        $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+        $myRole = normalize_user_role($_SESSION['usuario_rol'] ?? 'user');
+        $myUserId = (int)($_SESSION['usuario_id'] ?? 0);
+
+        $stmt = $pdo->prepare('SELECT id, role, correo FROM users WHERE id = :id');
+        $stmt->execute(['id' => $targetUserId]);
+        $target = $stmt->fetch();
+
+        if (!$target || $targetUserId <= 0) {
+            $tipo = 'error';
+            $mensaje = 'Usuario objetivo no válido.';
+        } elseif ($targetUserId === $myUserId) {
+            $tipo = 'error';
+            $mensaje = 'No puedes eliminar tu propia cuenta desde este panel.';
+        } else {
+            $targetCurrentRole = normalize_user_role($target['role'] ?? 'user');
+
+            if ($myRole === 'superadmin') {
+                $canDelete = true;
+            } else {
+                $canDelete = role_level($myRole) > role_level($targetCurrentRole);
+            }
+
+            if (!$canDelete) {
+                $tipo = 'error';
+                $mensaje = 'No tienes permisos para eliminar este usuario.';
+            } else {
+                $delete = $pdo->prepare('DELETE FROM users WHERE id = :id LIMIT 1');
+                $delete->execute(['id' => $targetUserId]);
+
+                if ($delete->rowCount() > 0) {
+                    record_audit_log($pdo, 'user_deleted', 'critical', 'Usuario eliminado #' . $targetUserId . ' (' . (string)$target['correo'] . ')', $targetUserId);
+                    $tipo = 'exito';
+                    $mensaje = 'Usuario eliminado correctamente.';
+                } else {
+                    $tipo = 'error';
+                    $mensaje = 'No se pudo eliminar el usuario.';
+                }
+            }
+        }
+    }
+
     $usersCount = fetch_total_users($pdo);
     $uploadsCount = fetch_total_uploads($pdo);
     $openTickets = fetch_open_tickets_count($pdo);
@@ -74,6 +117,53 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administrador</title>
     <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .admin-actions-cell {
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .admin-role-form,
+        .admin-delete-form {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .admin-delete-disabled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+        }
+
+        .admin-actions-cell select,
+        .admin-actions-cell button {
+            margin: 0;
+        }
+
+        .admin-actions-cell button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            padding: 8px 14px;
+            white-space: nowrap;
+            border-radius: 6px;
+            line-height: 1.2;
+        }
+
+        .admin-role-form button {
+            min-width: 96px;
+        }
+
+        .admin-delete-form button {
+            min-width: 96px;
+        }
+    </style>
 </head>
 
 <body>
@@ -116,6 +206,7 @@ try {
                         <th>Rol</th>
                         <th>Creado</th>
                         <th>Actualizar rol</th>
+                        <th>Eliminar</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,8 +217,8 @@ try {
                             <td><?php echo htmlspecialchars($user['nombre'] . ' ' . $user['apellidos']); ?></td>
                             <td><?php echo htmlspecialchars($user['role'] ?? 'user'); ?></td>
                             <td><?php echo htmlspecialchars($user['created_at']); ?></td>
-                            <td>
-                                <form method="POST" action="" style="display:inline">
+                            <td class="admin-actions-cell">
+                                <form method="POST" action="" class="admin-role-form">
                                     <?php echo csrf_input_field(); ?>
                                     <input type="hidden" name="target_user_id" value="<?php echo (int)$user['id']; ?>">
                                     <select name="new_role">
@@ -139,6 +230,17 @@ try {
                                     </select>
                                     <button type="submit" name="actualizar_rol" value="1">Guardar</button>
                                 </form>
+                            </td>
+                            <td class="admin-actions-cell">
+                                <?php if ((int)$user['id'] === (int)($_SESSION['usuario_id'] ?? 0)): ?>
+                                    <span class="admin-delete-disabled">No permitido</span>
+                                <?php else: ?>
+                                    <form method="POST" action="" class="admin-delete-form" onsubmit="return confirm('Esta accion eliminara la cuenta del usuario. ¿Continuar?');">
+                                        <?php echo csrf_input_field(); ?>
+                                        <input type="hidden" name="target_user_id" value="<?php echo (int)$user['id']; ?>">
+                                        <button type="submit" name="eliminar_usuario" value="1">Eliminar</button>
+                                    </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

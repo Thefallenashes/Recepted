@@ -14,9 +14,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   `edad` TINYINT UNSIGNED NOT NULL,
   `role` ENUM('user','admin','superadmin') NOT NULL DEFAULT 'user',
   `password` VARCHAR(255) NOT NULL,
+  `email_verified_at` DATETIME NULL,
+  `email_verification_token_hash` CHAR(64) NULL,
+  `email_verification_expires_at` DATETIME NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_correo` (`correo`)
+  UNIQUE KEY `uniq_correo` (`correo`),
+  INDEX `idx_users_email_verification_token_hash` (`email_verification_token_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla de finanzas (relación 1:1 con users)

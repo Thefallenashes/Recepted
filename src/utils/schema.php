@@ -176,6 +176,22 @@ SQL;
             $pdo->exec("ALTER TABLE users ADD COLUMN role ENUM('user','admin','superadmin') NOT NULL DEFAULT 'user' AFTER edad");
         }
 
+        if (!schema_column_exists($pdo, 'users', 'email_verified_at', $dbName)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN email_verified_at DATETIME NULL AFTER password');
+        }
+
+        if (!schema_column_exists($pdo, 'users', 'email_verification_token_hash', $dbName)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN email_verification_token_hash CHAR(64) NULL AFTER email_verified_at');
+        }
+
+        if (!schema_column_exists($pdo, 'users', 'email_verification_expires_at', $dbName)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN email_verification_expires_at DATETIME NULL AFTER email_verification_token_hash');
+        }
+
+        if (!schema_index_exists($pdo, 'users', 'idx_users_email_verification_token_hash', $dbName)) {
+            $pdo->exec('ALTER TABLE users ADD INDEX idx_users_email_verification_token_hash (email_verification_token_hash)');
+        }
+
         if (!schema_column_exists($pdo, 'transactions', 'category_id', $dbName)) {
             $pdo->exec('ALTER TABLE transactions ADD COLUMN category_id BIGINT UNSIGNED NULL AFTER category');
         }

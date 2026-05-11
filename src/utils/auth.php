@@ -296,6 +296,13 @@ function login_from_remember_cookie(PDO $pdo): void
             return;
         }
 
+        $emailVerifiedAt = $user['email_verified_at'] ?? null;
+        $hasPendingVerification = !empty($user['email_verification_token_hash'] ?? null);
+        if (empty($emailVerifiedAt) && $hasPendingVerification) {
+            // Si la cuenta esta pendiente de verificacion, no permitir login por cookie.
+            return;
+        }
+
         session_regenerate_id(true);
         hydrate_user_session($user, false);
 

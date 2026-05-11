@@ -1,9 +1,12 @@
 ﻿<?php
 require_once __DIR__ . '/includes/auth_bootstrap.php';
 require_once __DIR__ . '/includes/sticky_menu.php';
+require_once __DIR__ . '/../utils/email_verification.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
+$registro_completado = false;
+$mensaje_enlace_verificacion = '';
 
 // Procesar el formulario cuando se envíe
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -61,11 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Encriptar la contraseña
                 $contraseña_encriptada = password_hash($contraseña, PASSWORD_DEFAULT);
+                $verificationToken = generate_email_verification_token();
+                $verificationTokenHash = email_verification_token_hash($verificationToken);
+                $verificationExpiresAt = (new DateTime('+24 hours'))->format('Y-m-d H:i:s');
+
+                $pdo->beginTransaction();
 
                 // Insertar nuevo usuario
                 $stmt = $pdo->prepare('
-                    INSERT INTO users (correo, nombre, apellidos, edad, role, password)
-                    VALUES (:correo, :nombre, :apellidos, :edad, :role, :password)
+                    INSERT INTO users (correo, nombre, apellidos, edad, role, password, email_verified_at, email_verification_token_hash, email_verification_expires_at)
+                    VALUES (:correo, :nombre, :apellidos, :edad, :role, :password, NULL, :email_verification_token_hash, :email_verification_expires_at)
                 ');
                 $stmt->execute([
                     'correo' => $correo,
@@ -73,7 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'apellidos' => $apellidos,
                     'edad' => $edad,
                     'role' => 'user',
-                    'password' => $contraseña_encriptada
+                    'password' => $contraseña_encriptada,
+                    'email_verification_token_hash' => $verificationTokenHash,
+                    'email_verification_expires_at' => $verificationExpiresAt,
                 ]);
 
                 $user_id = $pdo->lastInsertId();
@@ -88,34 +98,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'currency' => 'EUR'
                 ]);
 
-                // Iniciar sesión automáticamente y crear cookie persistente
-                session_regenerate_id(true);
-                hydrate_user_session([
-                    'id' => (int)$user_id,
-                    'correo' => $correo,
-                    'nombre' => $nombre,
-                    'apellidos' => $apellidos,
-                    'edad' => $edad,
-                    'role' => 'user',
-                ]);
+                $emailEnviado = send_account_verification_email($correo, $verificationToken);
 
-                // Crear cookie persistente si el usuario marca 'recordarme' al registrarse
-                $remember = !empty($_POST['remember']);
-                if ($remember && function_exists('create_remember_token')) {
-                    create_remember_token($pdo, (int)$user_id);
-                }
+                $pdo->commit();
 
                 if (function_exists('record_audit_log')) {
-                    record_audit_log($pdo, 'register_success', 'info', 'Cuenta creada desde formulario de registro');
+                    record_audit_log($pdo, 'register_success', 'info', 'Cuenta creada desde formulario de registro. Verificacion de correo pendiente.');
                 }
 
-                header('Location: home.php');
-                exit();
+                if ($emailEnviado) {
+                    $tipo_mensaje = 'exito';
+                    $mensaje = 'Cuenta creada. Te enviamos un correo de verificacion. Revisa tu bandeja de entrada para activar tu cuenta.';
+                } else {
+                    $tipo_mensaje = 'error';
+                    $mensaje = 'Cuenta creada, pero no se pudo enviar el correo automaticamente desde este entorno.';
+                    $mensaje_enlace_verificacion = build_email_verification_link($verificationToken);
+                    error_log('Registro con verificacion manual para: ' . $correo);
+                }
+
+                $registro_completado = true;
             }
         } catch (PDOException $e) {
+            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $tipo_mensaje = 'error';
             $mensaje = 'Error al registrar la cuenta. Intenta nuevamente.';
             error_log('Error en registro: ' . $e->getMessage());
+        } catch (RuntimeException $e) {
+            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $tipo_mensaje = 'error';
+            $mensaje = $e->getMessage();
         }
     } else {
         $tipo_mensaje = 'error';
@@ -151,48 +166,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if ($mensaje): ?>
             <div class="mensaje <?php echo $tipo_mensaje; ?>">
-                <?php echo $mensaje; ?>
+                <?php echo htmlspecialchars($mensaje); ?>
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="" class="auth-form">
-            <?php echo csrf_input_field(); ?>
-            <div class="form-group">
-                <label for="correo">Correo Electrónico:</label>
-                <input type="email" id="correo" name="correo" required 
-                       value="<?php echo htmlspecialchars($_POST['correo'] ?? ''); ?>">
+        <?php if (!empty($mensaje_enlace_verificacion)): ?>
+            <div class="mensaje exito">
+                <p>Usa este enlace para verificar manualmente tu cuenta:</p>
+                <p><a href="<?php echo htmlspecialchars($mensaje_enlace_verificacion); ?>"><?php echo htmlspecialchars($mensaje_enlace_verificacion); ?></a></p>
             </div>
+        <?php endif; ?>
 
-            <div class="form-group">
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" required
-                       value="<?php echo htmlspecialchars($_POST['nombre'] ?? ''); ?>">
-            </div>
+        <?php if (!$registro_completado): ?>
+            <form method="POST" action="" class="auth-form">
+                <?php echo csrf_input_field(); ?>
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico:</label>
+                    <input type="email" id="correo" name="correo" required 
+                           value="<?php echo htmlspecialchars($_POST['correo'] ?? ''); ?>">
+                </div>
 
-            <div class="form-group">
-                <label for="apellidos">Apellidos:</label>
-                <input type="text" id="apellidos" name="apellidos" required
-                       value="<?php echo htmlspecialchars($_POST['apellidos'] ?? ''); ?>">
-            </div>
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required
+                           value="<?php echo htmlspecialchars($_POST['nombre'] ?? ''); ?>">
+                </div>
 
-            <div class="form-group">
-                <label for="edad">Edad:</label>
-                <input type="number" id="edad" name="edad" min="13" max="120" required
-                       value="<?php echo htmlspecialchars($_POST['edad'] ?? ''); ?>">
-            </div>
+                <div class="form-group">
+                    <label for="apellidos">Apellidos:</label>
+                    <input type="text" id="apellidos" name="apellidos" required
+                           value="<?php echo htmlspecialchars($_POST['apellidos'] ?? ''); ?>">
+                </div>
 
-            <div class="form-group">
-                <label for="contraseña">Contraseña:</label>
-                <input type="password" id="contraseña" name="contraseña" required>
-            </div>
+                <div class="form-group">
+                    <label for="edad">Edad:</label>
+                    <input type="number" id="edad" name="edad" min="13" max="120" required
+                           value="<?php echo htmlspecialchars($_POST['edad'] ?? ''); ?>">
+                </div>
 
-            <div class="form-group">
-                <label for="confirmar_contraseña">Confirmar Contraseña:</label>
-                <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" required>
-            </div>
+                <div class="form-group">
+                    <label for="contraseña">Contraseña:</label>
+                    <input type="password" id="contraseña" name="contraseña" required>
+                </div>
 
-            <button type="submit" class="btn auth-submit-btn">Registrarse</button>
-        </form>
+                <div class="form-group">
+                    <label for="confirmar_contraseña">Confirmar Contraseña:</label>
+                    <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" required>
+                </div>
+
+                <button type="submit" class="btn auth-submit-btn">Registrarse</button>
+            </form>
+        <?php endif; ?>
 
         <p class="link-login auth-helper-link">¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a></p>
     </div>

@@ -37,23 +37,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['debug'])) {
             $usuario = $stmt->fetch();
 
             if ($usuario && password_verify($contraseña, $usuario['password'])) {
+                $emailVerifiedAt = $usuario['email_verified_at'] ?? null;
+                $hasPendingVerification = !empty($usuario['email_verification_token_hash'] ?? null);
+                if (empty($emailVerifiedAt) && $hasPendingVerification) {
+                    $tipo_mensaje = 'error';
+                    $mensaje = 'Tu cuenta aun no esta verificada. Revisa tu correo para activar tu cuenta.';
+                } else {
                 // Inicio de sesión exitoso
-                session_regenerate_id(true);
-                $usuario['role'] = normalize_user_role($usuario['role'] ?? 'user');
-                hydrate_user_session($usuario);
+                    session_regenerate_id(true);
+                    $usuario['role'] = normalize_user_role($usuario['role'] ?? 'user');
+                    hydrate_user_session($usuario);
 
-                // Crear token persistente (cookie) para recordar al usuario 3 días si pidió recordarme
-                $remember = !empty($_POST['remember']);
-                if ($remember && function_exists('create_remember_token')) {
-                    create_remember_token($pdo, (int)$usuario['id']);
+                    // Crear token persistente (cookie) para recordar al usuario 3 días si pidió recordarme
+                    $remember = !empty($_POST['remember']);
+                    if ($remember && function_exists('create_remember_token')) {
+                        create_remember_token($pdo, (int)$usuario['id']);
+                    }
+
+                    if (function_exists('record_audit_log')) {
+                        record_audit_log($pdo, 'login_success', 'info', 'Inicio de sesión correcto');
+                    }
+
+                    header('Location: home.php');
+                    exit();
                 }
-
-                if (function_exists('record_audit_log')) {
-                    record_audit_log($pdo, 'login_success', 'info', 'Inicio de sesión correcto');
-                }
-
-                header('Location: home.php');
-                exit();
             } else {
                 $tipo_mensaje = 'error';
                 $mensaje = 'Correo o contraseña incorrectos';

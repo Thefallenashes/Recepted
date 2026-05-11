@@ -250,6 +250,51 @@ $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
             .landing-hero-visual {
                 justify-content: center;
             }
+
+            /* Secciones adaptativas */
+            .landing-section {
+                padding: 0 5%;
+            }
+
+            .section-inner {
+                flex-direction: column !important;
+                border-bottom: 4px solid var(--gold);
+            }
+
+            .landing-section:first-child .section-inner {
+                border-top: 4px solid var(--gold);
+            }
+
+            .section-content {
+                flex: 0 0 auto !important;
+                padding: 60px 5% !important;
+            }
+
+            .section-image {
+                flex: 1 1 auto !important;
+                min-height: 250px;
+            }
+
+            .landing-section.from-left .section-content { order: 1; }
+            .landing-section.from-left .section-image   { order: 2; }
+
+            .landing-section.from-right .section-content { order: 1; }
+            .landing-section.from-right .section-image   { order: 2; }
+
+            .fade-from-left,
+            .fade-from-right {
+                transform: translateY(-40px) !important;
+            }
+
+            .fade-from-left.is-visible,
+            .fade-from-right.is-visible {
+                transform: translateY(0) !important;
+            }
+
+            /* Footer responsivo */
+            .col-md-6 {
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -327,7 +372,9 @@ $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
                     <h2>Categorización automática</h2>
                     <p>¡Clasifica tus gastos al instante y visualiza tu progreso en un instante!.</p>
                 </div>
-                <div class="section-image">imagen</div>
+                <div class="section-image">
+                    <img src="../images/terceraImagen.png" alt="Categorización automática de gastos">
+                </div>
             </div>
         </div>
 
@@ -337,7 +384,9 @@ $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
                     <h2>Metas y retos que funcionan</h2>
                     <p>Fija metas y progresa para ganar recompensas por cumplir tus objetivos.</p>
                 </div>
-                <div class="section-image">imagen</div>
+                <div class="section-image">
+                    <img src="../images/cuartaImagen.png" alt="Metas y retos financieros">
+                </div>
             </div>
         </div>
 
@@ -347,34 +396,35 @@ $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
                     <h2>Planes claros y económicos</h2>
                     <p>¡Pruebalo gratis! , Si decides que quieres continuar utilizando nuestros servicios podrás subscribirte desde 4,99 €/mes con funciones avanzadas y descuento para estudiantes.</p>
                 </div>
-                <div class="section-image">imagen</div>
+                <div class="section-image">
+                    <img src="../images/quintaImagen.png" alt="Planes claros y económicos">
+                </div>
             </div>
         </div>
 
     </div>
 
-    <div class="landing-bottom-controls">
-        <?php if (!empty($mensaje_cookies)): ?>
-            <p><?php echo htmlspecialchars($mensaje_cookies); ?></p>
-        <?php endif; ?>
-        <?php if (!empty($mensaje_debug)): ?>
-            <p><?php echo htmlspecialchars($mensaje_debug); ?></p>
-        <?php endif; ?>
-
-        <?php if ($debug_activo): ?>
-            <h2>Enlaces Modo de desarollo</h2>
-            <ul>
-                <?php foreach ($paginas_debug as $pagina): ?>
-                    <li>
-                        <a href="<?php echo htmlspecialchars($pagina['nombre']); ?>"><?php echo htmlspecialchars($pagina['nombre']); ?></a>
-                        <?php if ($pagina['requiere_parametro']): ?>
-                            (requiere parámetros)
-                        <?php endif; ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </div>
+    <footer class="bg-dark text-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <h5>Sobre Recepted</h5>
+                    <p>Tu plataforma de gestión financiera personal para controlar ingresos, organizar archivos y tomar decisiones informadas.</p>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <h5>Contacto</h5>
+                    <p>Email: info@recepted.com</p>
+                    <p>Teléfono: +34 XXX XXX XXX</p>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="mb-0">&copy; 2026 Recepted. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         (function () {

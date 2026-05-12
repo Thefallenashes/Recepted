@@ -408,13 +408,13 @@ $hero_cta_href = $usuario_autenticado ? 'home.php' : 'register.php';
         <div class="container">
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <h5>Sobre Recepted</h5>
-                    <p>Tu plataforma de gestión financiera personal para controlar ingresos, organizar archivos y tomar decisiones informadas.</p>
+                    <h5>Sobre Nosotros</h5>
+                    <p>Finergo es una empresa de desarollo de software enfocado a la gestion de finanzas.</p>
                 </div>
                 <div class="col-md-6 mb-4">
                     <h5>Contacto</h5>
-                    <p>Email: info@recepted.com</p>
-                    <p>Teléfono: +34 XXX XXX XXX</p>
+                    <p>Email: info@finergo.com</p>
+                    <p>Teléfono: +34 696 420 404</p>
                 </div>
             </div>
             <hr class="bg-light">

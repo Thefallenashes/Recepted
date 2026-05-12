@@ -48,6 +48,8 @@ if (!function_exists('render_sticky_menu')) {
         $showLogout = (bool)$config['show_logout'];
         $navClass = trim((string)$config['nav_class']);
         $toggleLabel = (string)$config['toggle_label'];
+        $currentScript = strtolower((string)basename((string)parse_url((string)($_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? ''), PHP_URL_PATH)));
+        $useLandingTheme = $currentScript === 'landing.php';
 
         $homeIcon = $imageBasePath . '/Home.PNG';
         $logoutIcon = $imageBasePath . '/BotonLogOut.PNG';
@@ -59,6 +61,7 @@ if (!function_exists('render_sticky_menu')) {
         static $bootstrapJsInjected = false;
 
         $filteredItems = [];
+        $hasCurrentNavItem = false;
         foreach ((array)$config['nav_items'] as $item) {
             if (!is_array($item)) {
                 continue;
@@ -76,10 +79,39 @@ if (!function_exists('render_sticky_menu')) {
                 continue;
             }
 
+            $itemPath = strtolower((string)basename((string)parse_url($href, PHP_URL_PATH)));
+            if ($currentScript !== '' && $itemPath === $currentScript) {
+                $hasCurrentNavItem = true;
+            }
+
             $filteredItems[] = [
                 'href' => $href,
                 'label' => $label,
             ];
+        }
+
+        if ($currentScript !== '' && $currentScript !== 'landing.php' && !$hasCurrentNavItem) {
+            $defaultCurrentLabels = [
+                'home.php' => 'Panel de usuario',
+                'index.php' => 'Panel de control',
+                'finanzas.php' => 'Finanzas',
+                'tickets.php' => 'Tickets',
+                'config.php' => 'Configuración',
+                'mis_uploads.php' => 'Mis archivos',
+                'perfil.php' => 'Perfil',
+                'admin_panel.php' => 'Panel de administracion',
+                'superadmin_console.php' => 'Consola',
+                'login.php' => 'Iniciar sesión',
+                'register.php' => 'Registrarse',
+                'verify_email.php' => 'Verificación',
+            ];
+
+            if (isset($defaultCurrentLabels[$currentScript])) {
+                array_unshift($filteredItems, [
+                    'href' => $currentScript,
+                    'label' => $defaultCurrentLabels[$currentScript],
+                ]);
+            }
         }
 
         // Mostrar acceso al panel de usuario en todas las pantallas autenticadas,
@@ -113,9 +145,11 @@ if (!function_exists('render_sticky_menu')) {
         $hasCollapsibleContent = !empty($filteredItems) || $showLogout;
         $collapseId = 'menuCollapse-' . substr(md5($containerClass . $innerClass . (string)count($filteredItems) . microtime(true)), 0, 8);
         $resolvedNavClass = trim(($navClass !== '' ? $navClass : 'sticky-links') . ' sticky-links navbar-collapse collapse');
+        $headerThemeClass = $useLandingTheme ? 'bg-primary' : 'bg-secondary menu-soft-tone';
+        $innerThemeClass = $useLandingTheme ? 'navbar-dark bg-dark' : 'navbar-dark menu-soft-tone-inner';
         ?>
-        <header class="<?php echo htmlspecialchars($containerClass, ENT_QUOTES, 'UTF-8'); ?> menu-bootstrap-nav navbar navbar-expand-lg bg-primary" data-menu="bootstrap">
-            <div class="<?php echo htmlspecialchars($innerClass, ENT_QUOTES, 'UTF-8'); ?> menu-bootstrap-nav-inner container-fluid navbar-dark bg-dark">
+        <header class="<?php echo htmlspecialchars($containerClass, ENT_QUOTES, 'UTF-8'); ?> menu-bootstrap-nav navbar navbar-expand-lg <?php echo htmlspecialchars($headerThemeClass, ENT_QUOTES, 'UTF-8'); ?>" data-menu="bootstrap">
+            <div class="<?php echo htmlspecialchars($innerClass, ENT_QUOTES, 'UTF-8'); ?> menu-bootstrap-nav-inner container-fluid <?php echo htmlspecialchars($innerThemeClass, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php if ($showHome): ?>
                     <a class="menu-icon-btn navbar-brand" href="<?php echo htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Inicio">
                         <img src="<?php echo htmlspecialchars($homeIcon, ENT_QUOTES, 'UTF-8'); ?>" alt="Inicio" class="icon-home">
@@ -137,8 +171,12 @@ if (!function_exists('render_sticky_menu')) {
                     <nav id="<?php echo htmlspecialchars($collapseId, ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo htmlspecialchars($resolvedNavClass, ENT_QUOTES, 'UTF-8'); ?>">
                         <ul class="navbar-nav ms-lg-auto sticky-links-list">
                             <?php foreach ($filteredItems as $item): ?>
+                                <?php
+                                $itemPath = strtolower((string)basename((string)parse_url((string)$item['href'], PHP_URL_PATH)));
+                                $isCurrentItem = $currentScript !== '' && $itemPath === $currentScript;
+                                ?>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="<?php echo htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8'); ?></a>
+                                    <a class="nav-link<?php echo $isCurrentItem ? ' active is-current' : ''; ?>" href="<?php echo htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8'); ?>"<?php if ($isCurrentItem): ?> aria-current="page"<?php endif; ?>><?php echo htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8'); ?></a>
                                 </li>
                             <?php endforeach; ?>
                             <?php if ($showLogout): ?>

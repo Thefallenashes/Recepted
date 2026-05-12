@@ -872,6 +872,14 @@
     padding-right: 12px !important;
 }
 
+.menu-bootstrap-nav.menu-soft-tone {
+    background-color: #3f454d !important;
+}
+
+.menu-bootstrap-nav .menu-bootstrap-nav-inner.menu-soft-tone-inner {
+    background: linear-gradient(180deg, #4a5159 0%, #3f454d 100%) !important;
+}
+
 .menu-bootstrap-nav .menu-icon-btn,
 .menu-bootstrap-nav .sticky-links .nav-link {
     background: transparent !important;
@@ -916,6 +924,15 @@
     border-radius: 8px;
     min-height: auto;
     padding: 6px var(--menu-btn-px) !important;
+}
+
+.menu-bootstrap-nav .sticky-links .nav-link.active,
+.menu-bootstrap-nav .sticky-links .nav-link.is-current {
+    background: transparent !important;
+    color: #c9ced6 !important;
+    pointer-events: none;
+    cursor: default;
+    opacity: 1;
 }
 
 .menu-bootstrap-nav .navbar-brand {

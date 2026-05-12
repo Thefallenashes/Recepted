@@ -60,9 +60,9 @@
 
 @media (max-width: 700px) {
     .sticky-page-menu-inner {
-        width: 90%;
+        width: 95%;
         min-height: 60px;
-        gap: 10px;
+        gap: 8px;
     }
 
     .sticky-links ul {

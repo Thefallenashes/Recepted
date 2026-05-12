@@ -35,7 +35,7 @@ $total_uploads = $debug_context['total_uploads'];
         'home_href' => 'landing.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
-            ['href' => 'home.php', 'label' => 'Panel de control'],
+            ['href' => 'home.php', 'label' => 'Panel de usuario'],
             ['href' => 'finanzas.php', 'label' => 'Finanzas'],
             ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],

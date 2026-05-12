@@ -463,7 +463,6 @@ try {
         'home_href' => 'landing.php',
         'logout_href' => 'scripts/logout.php',
         'nav_items' => [
-            ['href' => 'mis_uploads.php', 'label' => 'Mis archivos'],
             ['href' => 'tickets.php', 'label' => 'Tickets'],
             ['href' => 'config.php', 'label' => 'Configuración'],
             ['href' => 'admin_panel.php', 'label' => 'Panel de administracion', 'min_role' => 'admin'],

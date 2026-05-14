@@ -502,7 +502,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_multiple'])) {
 
             fileInput.addEventListener('change', function() {
                 addFiles(fileInput.files);
-                fileInput.value = '';
             });
 
             ['dragenter', 'dragover'].forEach(eventName => {

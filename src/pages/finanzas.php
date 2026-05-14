@@ -661,7 +661,7 @@ try {
 
                             <div class="currency-comparator-info" id="comparator-info" style="display: none;">
                                 <div class="comparator-original">
-                                    <p class="comparator-label">Monto original:</p>
+                                    <p class="comparator-label">Cantidad original:</p>
                                     <p class="comparator-value">
                                         <span id="original-amount">0.00</span>
                                         <span id="original-symbol"><?php echo htmlspecialchars(get_currency_symbol($finanzas['currency'])); ?></span>

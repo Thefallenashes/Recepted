@@ -33,7 +33,7 @@ try {
         $errors = [];
         if (empty($nombre)) $errors[] = 'El nombre es requerido.';
         if (empty($apellidos)) $errors[] = 'Los apellidos son requeridos.';
-        if ($edad < 13 || $edad > 120) $errors[] = 'Edad inválida.';
+        if ($edad < 18 || $edad > 120) $errors[] = 'Edad inválida.';
 
         if (empty($errors)) {
             update_user_profile($pdo, $userId, $nombre, $apellidos, $edad);
@@ -107,7 +107,7 @@ try {
                 </div>
                 <div class="form-group">
                     <label for="edad">Edad:</label>
-                    <input id="edad" name="edad" type="number" min="13" max="120" value="<?php echo htmlspecialchars($usuario['edad']); ?>">
+                    <input id="edad" name="edad" type="number" min="18" max="120" value="<?php echo htmlspecialchars($usuario['edad']); ?>">
                 </div>
                 <button class="btn" type="submit">Guardar</button>
                 <a class="btn" href="config.php">Volver a Configuración</a>

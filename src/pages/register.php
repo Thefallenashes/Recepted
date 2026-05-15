@@ -35,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = "Los apellidos son requeridos";
     }
 
-    if ($edad < 13 || $edad > 120) {
-        $errores[] = "La edad debe estar entre 13 y 120 años";
+    if ($edad < 18 || $edad > 120) {
+        $errores[] = "La edad debe estar entre 18 y 120 años";
     }
 
     if (empty($contraseña)) {
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-group">
                     <label for="edad">Edad:</label>
-                    <input type="number" id="edad" name="edad" min="13" max="120" required
+                          <input type="number" id="edad" name="edad" min="18" max="120" required
                            value="<?php echo htmlspecialchars($_POST['edad'] ?? ''); ?>">
                 </div>
 

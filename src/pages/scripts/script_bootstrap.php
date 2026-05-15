@@ -68,12 +68,46 @@ function resolve_upload_realpath(string $relativePath): ?string
         return null;
     }
 
-    $realFile = realpath(dirname(__DIR__, 2) . '/' . ltrim($relativePath, '/'));
-    if ($realFile === false || strpos($realFile, $base) !== 0 || !is_file($realFile)) {
+    $candidates = [];
+    $normalizedPath = str_replace('\\', '/', trim($relativePath));
+
+    if ($normalizedPath === '') {
         return null;
     }
 
-    return $realFile;
+    if (preg_match('/^[A-Za-z]:\//', $normalizedPath) === 1 || str_starts_with($normalizedPath, '/')) {
+        $candidates[] = $normalizedPath;
+    }
+
+    $normalizedPath = ltrim($normalizedPath, '/');
+
+    if ($normalizedPath !== '') {
+        $candidates[] = dirname(__DIR__, 2) . '/' . $normalizedPath;
+        $candidates[] = dirname(__DIR__, 2) . '/uploads/' . basename($normalizedPath);
+
+        if (str_starts_with($normalizedPath, 'src/uploads/')) {
+            $candidates[] = dirname(__DIR__, 2) . '/' . substr($normalizedPath, 4);
+        }
+
+        if (str_starts_with($normalizedPath, 'uploads/')) {
+            $candidates[] = dirname(__DIR__, 2) . '/' . $normalizedPath;
+        }
+    }
+
+    foreach (array_unique($candidates) as $candidatePath) {
+        $realFile = realpath($candidatePath);
+        if ($realFile === false || !is_file($realFile)) {
+            continue;
+        }
+
+        if (strpos($realFile, $base) !== 0) {
+            continue;
+        }
+
+        return $realFile;
+    }
+
+    return null;
 }
 
 /**

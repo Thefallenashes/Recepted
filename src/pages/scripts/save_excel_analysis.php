@@ -42,93 +42,108 @@ try {
     $pdo = getPDO();
     assert_finanzas_schema($pdo);
 
-    // 1. Crear o obtener la categoría
-    $stmt = $pdo->prepare('SELECT id FROM expense_categories WHERE user_id = :user_id AND name = :name LIMIT 1');
-    $stmt->execute([
-        'user_id' => $userId,
-        'name' => $categoryName,
-    ]);
-    $categoryId = $stmt->fetchColumn();
+    $pdo->beginTransaction();
 
-    if (!$categoryId) {
-        $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
+    try {
+        // 1. Crear o obtener la categoría
+        $stmt = $pdo->prepare('SELECT id FROM expense_categories WHERE user_id = :user_id AND name = :name LIMIT 1');
         $stmt->execute([
             'user_id' => $userId,
-            'type' => 'mixed',
-            'name' => $categoryName
+            'name' => $categoryName,
         ]);
-        $categoryId = $pdo->lastInsertId();
-    }
+        $categoryId = $stmt->fetchColumn();
 
-    // 2. Crear una transacción neta por hoja
-    $totalBalance = 0;
-    $transactionsCreated = [];
-
-    $insertTxStmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
-
-    foreach ($sheets as $sheet) {
-        $sheetName = trim($sheet['sheetName'] ?? '');
-        $gastos = (float)($sheet['gastos_total'] ?? 0);
-        $beneficios = (float)($sheet['beneficios_total'] ?? 0);
-        $balance = $beneficios - $gastos;
-
-        if (empty($sheetName)) {
-            continue;
+        if (!$categoryId) {
+            $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
+            $stmt->execute([
+                'user_id' => $userId,
+                'type' => 'mixed',
+                'name' => $categoryName
+            ]);
+            $categoryId = $pdo->lastInsertId();
         }
 
-        $txType = 'expense';
-        $txAmount = abs($balance);
+        // 2. Crear una transacción neta por hoja
+        $totalBalance = 0;
+        $transactionsCreated = [];
 
-        if ($balance > 0) {
-            $txType = 'income';
-            $txAmount = $balance;
-        } elseif ($balance < 0) {
+        $insertTxStmt = $pdo->prepare('INSERT INTO transactions (user_id, type, amount, category, category_id, description) VALUES (:user_id, :type, :amount, :category, :category_id, :description)');
+
+        foreach ($sheets as $sheet) {
+            $sheetName = trim($sheet['sheetName'] ?? '');
+            $gastos = (float)($sheet['gastos_total'] ?? 0);
+            $beneficios = (float)($sheet['beneficios_total'] ?? 0);
+            $balance = $beneficios - $gastos;
+
+            if (empty($sheetName)) {
+                continue;
+            }
+
             $txType = 'expense';
             $txAmount = abs($balance);
+
+            if ($balance > 0) {
+                $txType = 'income';
+                $txAmount = $balance;
+            } elseif ($balance < 0) {
+                $txType = 'expense';
+                $txAmount = abs($balance);
+            }
+
+            // Si el balance es 0 no crea transacción de hoja
+            if ($txAmount > 0) {
+                $insertTxStmt->execute([
+                    'user_id' => $userId,
+                    'type' => $txType,
+                    'amount' => $txAmount,
+                    'category' => $categoryName,
+                    'category_id' => $categoryId,
+                    'description' => $categoryName . '-' . $sheetName,
+                ]);
+
+                $transactionsCreated[] = [
+                    'sheet' => $sheetName,
+                    'type' => $txType,
+                    'amount' => $txAmount,
+                ];
+            }
+
+            $totalBalance += $balance;
         }
 
-        // Si el balance es 0 no crea transacción de hoja
-        if ($txAmount > 0) {
-            $insertTxStmt->execute([
-                'user_id' => $userId,
-                'type' => $txType,
-                'amount' => $txAmount,
-                'category' => $categoryName,
-                'category_id' => $categoryId,
-                'description' => $categoryName . '-' . $sheetName,
-            ]);
+        // 4. Actualizar balance en tabla finanzas
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = :user_id AND type = 'income'");
+        $stmt->execute(['user_id' => $userId]);
+        $income = (float)$stmt->fetchColumn();
 
-            $transactionsCreated[] = [
-                'sheet' => $sheetName,
-                'type' => $txType,
-                'amount' => $txAmount,
-            ];
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = :user_id AND type = 'expense'");
+        $stmt->execute(['user_id' => $userId]);
+        $expenses = (float)$stmt->fetchColumn();
+
+        $newBalance = $income - $expenses;
+
+        $stmt = $pdo->prepare('UPDATE finanzas SET balance = :balance, income = :income, expenses = :expenses WHERE user_id = :user_id');
+        $stmt->execute([
+            'balance' => $newBalance,
+            'income' => $income,
+            'expenses' => $expenses,
+            'user_id' => $userId
+        ]);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
         }
-
-        $totalBalance += $balance;
+        throw $e;
     }
 
-    // 4. Actualizar balance en tabla finanzas
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = :user_id AND type = 'income'");
-    $stmt->execute(['user_id' => $userId]);
-    $income = (float)$stmt->fetchColumn();
-
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = :user_id AND type = 'expense'");
-    $stmt->execute(['user_id' => $userId]);
-    $expenses = (float)$stmt->fetchColumn();
-
-    $newBalance = $income - $expenses;
-
-    $stmt = $pdo->prepare('UPDATE finanzas SET balance = :balance, income = :income, expenses = :expenses WHERE user_id = :user_id');
-    $stmt->execute([
-        'balance' => $newBalance,
-        'income' => $income,
-        'expenses' => $expenses,
-        'user_id' => $userId
-    ]);
-
     if (function_exists('record_audit_log')) {
-        record_audit_log($pdo, 'excel_analysis_saved', 'info', "Análisis de Excel guardado: $filename con " . count($sheets) . " hojas");
+        try {
+            record_audit_log($pdo, 'excel_analysis_saved', 'info', "Análisis de Excel guardado: $filename con " . count($sheets) . " hojas");
+        } catch (Exception $e) {
+            error_log('Excel analysis audit log error: ' . $e->getMessage());
+        }
     }
 
     echo json_encode([

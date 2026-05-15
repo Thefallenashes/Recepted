@@ -4,6 +4,8 @@ require_once __DIR__ . '/includes/sticky_menu.php';
 require_once __DIR__ . '/../utils/email_verification.php';
 require_once __DIR__ . '/../utils/schema.php';
 
+enforce_csrf_protection('redirect', 'register.php');
+
 $mensaje = '';
 $tipo_mensaje = '';
 $registro_completado = false;

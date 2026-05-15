@@ -56,19 +56,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $clientMime = strtolower((string) ($file['type'] ?? ''));
-            $effectiveMime = strtolower((string) ($detectedMime ?: $clientMime));
 
             if ($safeExt === '' || !in_array($safeExt, $allowedExtensions, true)) {
                 $tipo = 'error';
                 $mensaje = 'Extensión no permitida. Solo se admiten archivos Excel: csv, xls, xlsx, xlsm, xlsb y xltx.';
             } else {
                 $allowedMimes = $allowedMimeTypesByExtension[$safeExt];
-                $mimeLooksValid = $effectiveMime === '' || in_array($effectiveMime, $allowedMimes, true);
+                if ($detectedMime !== null) {
+                    $mimeLooksValid = in_array($detectedMime, $allowedMimes, true);
+                } else {
+                    $mimeLooksValid = $clientMime === '' || in_array($clientMime, $allowedMimes, true);
+                }
 
-                if (!$mimeLooksValid && $clientMime !== '' && !in_array($clientMime, $allowedMimes, true)) {
+                if (!$mimeLooksValid) {
                     $tipo = 'error';
                     $mensaje = 'El tipo de archivo detectado no coincide con la extensión seleccionada.';
                 } else {
+                    $effectiveMime = $detectedMime !== null
+                        ? $detectedMime
+                        : ($clientMime !== '' ? $clientMime : 'application/octet-stream');
+
                     try {
                         $randomSuffix = bin2hex(random_bytes(6));
                     } catch (Exception $e) {

@@ -74,6 +74,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
         $isAjax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
+        $transactionType = strtolower(trim((string)($_POST['transaction_type'] ?? 'expense')));
 
         if ($action === 'add_category') {
             $categoryName = trim($_POST['category_name'] ?? '');
@@ -144,7 +145,7 @@ try {
         }
 
         if ($action === 'add_transaction') {
-            $type = 'expense';
+            $type = in_array($transactionType, ['income', 'expense'], true) ? $transactionType : 'expense';
 
             $amount = (float)($_POST['amount'] ?? 0);
             $description = trim($_POST['description'] ?? '');
@@ -158,14 +159,22 @@ try {
                 $category = categorize_transaction($description, $type);
 
                 if ($categoryIdToUse !== null) {
-                    $stmt = $pdo->prepare('SELECT name FROM expense_categories WHERE id = :id AND user_id = :user_id LIMIT 1');
+                    $stmt = $pdo->prepare('SELECT name, type FROM expense_categories WHERE id = :id AND user_id = :user_id LIMIT 1');
                     $stmt->execute([
                         'id' => $categoryIdToUse,
                         'user_id' => $userId,
                     ]);
-                    $customCategoryName = $stmt->fetchColumn();
-                    if (is_string($customCategoryName) && $customCategoryName !== '') {
-                        $category = $customCategoryName;
+                    $selectedCategory = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if (is_array($selectedCategory)) {
+                        $customCategoryName = trim((string)($selectedCategory['name'] ?? ''));
+                        $customCategoryType = strtolower(trim((string)($selectedCategory['type'] ?? 'mixed')));
+                        if ($customCategoryName !== '' && in_array($customCategoryType, ['mixed', $type], true)) {
+                            $category = $customCategoryName;
+                        } else {
+                            $tipo = 'error';
+                            $mensaje = 'La categoría seleccionada no es válida para el tipo de transacción.';
+                            $categoryIdToUse = 0;
+                        }
                     } else {
                         $tipo = 'error';
                         $mensaje = 'La categoría seleccionada no es válida para el tipo de transacción.';
@@ -317,8 +326,17 @@ try {
     $stmt = $pdo->prepare('SELECT id, name, color, type FROM expense_categories WHERE user_id = :user_id ORDER BY id ASC');
     $stmt->execute(['user_id' => $userId]);
     $personalCategories = $stmt->fetchAll();
-    $expenseCategories = $personalCategories;
+    $expenseCategories = [];
     $incomeCategories = [];
+    foreach ($personalCategories as $categoryRow) {
+        $categoryType = strtolower(trim((string)($categoryRow['type'] ?? 'mixed')));
+        if (in_array($categoryType, ['expense', 'mixed'], true)) {
+            $expenseCategories[] = $categoryRow;
+        }
+        if (in_array($categoryType, ['income', 'mixed'], true)) {
+            $incomeCategories[] = $categoryRow;
+        }
+    }
 
     $stmt = $pdo->prepare("SELECT t.id, t.type, t.amount, t.category, t.description, t.created_at, t.category_id, COALESCE(ec.name, t.category) AS display_category
         FROM transactions t
@@ -441,6 +459,7 @@ try {
     $maxCategoryTotal = 0.0;
     $expensesByPersonalCategory = [];
     $transactionsByCategory = [];
+    $chartSeriesByCategory = [];
     $goals = [];
     $excelUploads = [];
 }
@@ -720,7 +739,6 @@ try {
                             <div class="ae-chart-types" id="aeChartTypes" style="display:none">
                                 <button class="ae-type-btn active" data-type="bar">Gráfico de barras</button>
                                 <button class="ae-type-btn"        data-type="pie">Gráfico de sectores</button>
-                                <button class="ae-type-btn"        data-type="line">Gráfico de líneas</button>
                                 <button class="ae-type-btn"        data-type="text">Texto simple</button>
                             </div>
 
@@ -735,6 +753,13 @@ try {
                             <?php echo csrf_input_field(); ?>
                             <input type="hidden" name="action" value="add_transaction">
                             <div class="form-group">
+                                <label for="transaction_type">Tipo</label>
+                                <select id="transaction_type" name="transaction_type">
+                                    <option value="expense"<?php echo (($transactionType ?? 'expense') === 'expense') ? ' selected' : ''; ?>>Gasto</option>
+                                    <option value="income"<?php echo (($transactionType ?? 'expense') === 'income') ? ' selected' : ''; ?>>Ingreso</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label for="amount">Importe</label>
                                 <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
                             </div>
@@ -742,8 +767,13 @@ try {
                                 <label for="category_id">Categoría</label>
                                 <select id="category_id" name="category_id" required>
                                     <option value="" selected disabled hidden></option>
-                                    <?php foreach ($expenseCategories as $cat): ?>
-                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                    <?php foreach ($personalCategories as $cat): ?>
+                                        <?php
+                                            $catType = strtolower(trim((string)($cat['type'] ?? 'mixed')));
+                                            $allowedTransactionTypes = $catType === 'mixed' ? ['expense', 'income'] : [$catType];
+                                            $catLabel = $catType === 'mixed' ? '' : ' (' . ($catType === 'income' ? 'Ingreso' : 'Gasto') . ')';
+                                        ?>
+                                        <option value="<?php echo (int)$cat['id']; ?>" data-category-types="<?php echo htmlspecialchars(implode(',', $allowedTransactionTypes), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($cat['name'] . $catLabel); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -935,6 +965,48 @@ try {
                     }
                 }
             });
+        }
+
+        const transactionTypeSelect = document.getElementById('transaction_type');
+        const transactionCategorySelect = document.getElementById('category_id');
+
+        function refreshTransactionCategories() {
+            if (!transactionTypeSelect || !transactionCategorySelect) {
+                return;
+            }
+
+            const selectedType = transactionTypeSelect.value || 'expense';
+            const options = Array.from(transactionCategorySelect.querySelectorAll('option[data-category-types]'));
+            let firstVisibleOption = null;
+
+            options.forEach((option) => {
+                const allowedTypes = (option.dataset.categoryTypes || '').split(',').map((value) => value.trim()).filter(Boolean);
+                const isVisible = allowedTypes.includes(selectedType);
+                option.hidden = !isVisible;
+                option.disabled = !isVisible;
+
+                if (isVisible && firstVisibleOption === null) {
+                    firstVisibleOption = option;
+                }
+
+                if (!isVisible && option.selected) {
+                    option.selected = false;
+                }
+            });
+
+            const currentSelection = transactionCategorySelect.selectedOptions[0];
+            if (!currentSelection || currentSelection.hidden) {
+                if (firstVisibleOption) {
+                    firstVisibleOption.selected = true;
+                } else {
+                    transactionCategorySelect.value = '';
+                }
+            }
+        }
+
+        if (transactionTypeSelect && transactionCategorySelect) {
+            transactionTypeSelect.addEventListener('change', refreshTransactionCategories);
+            refreshTransactionCategories();
         }
 
         function bindDynamicDeleteTransaction() {
@@ -1359,27 +1431,7 @@ try {
                             }
                         }
                     });
-                } else if (type === 'line') {
-                    ci = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.labels,
-                            datasets: [
-                                { label: 'Gastos', data: data.gastos, borderColor: colGb, backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.35, fill: true, pointRadius: 4 },
-                                { label: 'Beneficios', data: data.beneficios, borderColor: colBb, backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.35, fill: true, pointRadius: 4 }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { position: 'top' },
-                                tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €' } }
-                            },
-                            scales: { y: { beginAtZero: true, ticks: { callback: v => fmt(v) + ' €' } } }
-                        }
-                    });
                 }
-
                 if (ci) chartInstances.push(ci);
             }
 
@@ -1490,26 +1542,6 @@ try {
                             legend: { position: 'top' },
                             tooltip: { callbacks: { label: ctx => { const pct = ((ctx.raw / total) * 100).toFixed(1); return ' ' + fmt(ctx.raw) + ' € (' + pct + '%)'; } } }
                         }
-                    }
-                });
-                chartInstances.push(ci);
-            } else if (type === 'line') {
-                const ci = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Total'],
-                        datasets: [
-                            { label: 'Gastos', data: [totalGastosConsolidado], borderColor: colGb, backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.35, fill: true, pointRadius: 4 },
-                            { label: 'Beneficios', data: [totalBeneficiosConsolidado], borderColor: colBb, backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.35, fill: true, pointRadius: 4 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) + ' €' } }
-                        },
-                        scales: { y: { beginAtZero: true, ticks: { callback: v => fmt(v) + ' €' } } }
                     }
                 });
                 chartInstances.push(ci);

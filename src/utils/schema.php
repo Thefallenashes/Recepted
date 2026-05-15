@@ -215,6 +215,33 @@ SQL;
             }
         }
 
+        $duplicateRowsStmt = $pdo->query('SELECT id, user_id, type, name FROM expense_categories ORDER BY user_id ASC, type ASC, name ASC, id ASC');
+        $duplicateRows = $duplicateRowsStmt ? $duplicateRowsStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        $groupedCategoryIds = [];
+        foreach ($duplicateRows as $row) {
+            $groupKey = (string)($row['user_id'] ?? '') . '|' . (string)($row['type'] ?? '') . '|' . (string)($row['name'] ?? '');
+            $groupedCategoryIds[$groupKey][] = (int)($row['id'] ?? 0);
+        }
+
+        foreach ($groupedCategoryIds as $categoryIds) {
+            $categoryIds = array_values(array_filter(array_map('intval', $categoryIds), static fn (int $value): bool => $value > 0));
+            if (count($categoryIds) < 2) {
+                continue;
+            }
+
+            $keepId = array_shift($categoryIds);
+            if ($keepId <= 0 || $categoryIds === []) {
+                continue;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+            $updateTransactions = $pdo->prepare('UPDATE transactions SET category_id = ? WHERE category_id IN (' . $placeholders . ')');
+            $updateTransactions->execute(array_merge([$keepId], $categoryIds));
+
+            $deleteDuplicates = $pdo->prepare('DELETE FROM expense_categories WHERE id IN (' . $placeholders . ')');
+            $deleteDuplicates->execute($categoryIds);
+        }
+
         if (!schema_index_exists($pdo, 'expense_categories', 'unique_user_category', $dbName)) {
             $pdo->exec('ALTER TABLE expense_categories ADD UNIQUE KEY unique_user_category (user_id, type, name)');
         }

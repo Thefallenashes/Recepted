@@ -3,6 +3,8 @@ require_once __DIR__ . '/includes/auth_bootstrap.php';
 require_once __DIR__ . '/includes/debug_helpers.php';
 require_once __DIR__ . '/includes/sticky_menu.php';
 
+enforce_csrf_protection('redirect', 'login.php');
+
 $mensaje = '';
 $tipo_mensaje = '';
 

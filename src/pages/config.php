@@ -42,8 +42,8 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <link rel="stylesheet" href="../css/config.css">
+    <link rel="stylesheet" href="../css/index.css?v=<?php echo urlencode((string)filemtime(__DIR__ . '/../css/index.css')); ?>">
+    <link rel="stylesheet" href="../css/config.css?v=<?php echo urlencode((string)filemtime(__DIR__ . '/../css/config.css')); ?>">
 </head>
 <body>
     <?php
@@ -87,7 +87,7 @@ try {
                     <div id="currency-dropdown" class="currency-dropdown" role="listbox" aria-label="Monedas disponibles"></div>
                 </div>
             </div>
-            <button class="btn" type="submit">Guardar</button>
+            <button class="btn config-action-btn" type="submit">Guardar</button>
         </form>
 
         <?php
@@ -225,7 +225,7 @@ try {
         <div class="config-section">
             <h2>Información de la cuenta</h2>
             <p>Actualiza tu nombre, apellidos y edad.</p>
-            <a class="btn" href="perfil.php?t=<?php echo htmlspecialchars($perfil_token); ?>" style="display:inline-flex;justify-content:center;">Actualizar informacion de la cuenta</a>
+            <a class="btn config-action-btn" href="perfil.php?t=<?php echo htmlspecialchars($perfil_token); ?>">Actualizar informacion de la cuenta</a>
         </div>
 
         <p><a href="home.php">Volver al inicio</a></p>

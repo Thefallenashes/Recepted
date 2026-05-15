@@ -23,14 +23,57 @@
     }
 }
 
-a {
+a:not(.btn) {
     color: #1d4ed8;
     text-decoration: none;
     font-weight: 700;
 }
 
-a:hover {
+a:not(.btn):hover {
     text-decoration: underline;
+}
+
+/* Asegura que los botones de accion de config tengan el mismo aspecto */
+.config-container .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #0f172a;
+}
+
+.config-container .btn:hover {
+    text-decoration: none;
+    color: #0f172a;
+}
+
+.config-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #a9dcec;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: #0f172a;
+    background: #baebfa;
+    box-shadow: 0 10px 20px rgba(186, 235, 250, 0.6);
+    text-decoration: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.config-action-btn:hover,
+.config-action-btn:focus-visible {
+    color: #0f172a;
+    background: #a9dcec;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(169, 220, 236, 0.72);
 }
 
 .config-section {
@@ -199,6 +242,5 @@ a:hover {
 }
 
 .config-section .btn {
-    display: inline-block;
-    text-decoration: none;
+    display: inline-flex;
 }

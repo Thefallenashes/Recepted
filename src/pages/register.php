@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/auth_bootstrap.php';
 require_once __DIR__ . '/includes/sticky_menu.php';
 require_once __DIR__ . '/../utils/email_verification.php';
+require_once __DIR__ . '/../utils/schema.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errores)) {
         try {
             $pdo = getPDO();
+            ensure_application_schema($pdo);
 
             // Verificar si el correo ya existe
             $stmt = $pdo->prepare('SELECT id FROM users WHERE correo = :correo');

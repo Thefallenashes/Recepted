@@ -301,7 +301,8 @@ try {
 
     $balance = $income - $expenses;
 
-    $stmt = $pdo->prepare('UPDATE finanzas SET balance = :balance, income = :income, expenses = :expenses WHERE user_id = :user_id');
+    $stmt = $pdo->prepare('INSERT INTO finanzas (user_id, balance, income, expenses) VALUES (:user_id, :balance, :income, :expenses)
+        ON DUPLICATE KEY UPDATE balance = VALUES(balance), income = VALUES(income), expenses = VALUES(expenses)');
     $stmt->execute([
         'balance' => $balance,
         'income' => $income,
@@ -772,8 +773,10 @@ try {
                                             $catType = strtolower(trim((string)($cat['type'] ?? 'mixed')));
                                             $allowedTransactionTypes = $catType === 'mixed' ? ['expense', 'income'] : [$catType];
                                             $catLabel = $catType === 'mixed' ? '' : ' (' . ($catType === 'income' ? 'Ingreso' : 'Gasto') . ')';
+                                            $catNameRaw = trim((string)($cat['name'] ?? ''));
+                                            $catNameForSelect = $catNameRaw !== '' ? $catNameRaw : ('Categoria importada #' . (int)$cat['id']);
                                         ?>
-                                        <option value="<?php echo (int)$cat['id']; ?>" data-category-types="<?php echo htmlspecialchars(implode(',', $allowedTransactionTypes), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($cat['name'] . $catLabel); ?></option>
+                                        <option value="<?php echo (int)$cat['id']; ?>" data-category-types="<?php echo htmlspecialchars(implode(',', $allowedTransactionTypes), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($catNameForSelect . $catLabel); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -1045,6 +1048,8 @@ try {
                                     list.innerHTML = '<p style="padding: 10px; color: #999;">No hay transacciones en esta categoría</p>';
                                 }
                             }
+                            // Sincronizar métricas globales y listados dependientes.
+                            window.location.reload();
                         } else {
                             button.disabled = false;
                         }

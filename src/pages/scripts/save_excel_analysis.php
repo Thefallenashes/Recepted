@@ -36,8 +36,20 @@ try {
         exit();
     }
 
-    // Extraer nombre del archivo sin extensión
-    $categoryName = pathinfo($filename, PATHINFO_FILENAME);
+    // Extraer nombre de categoría desde archivo, evitando cadenas vacías.
+    $categoryName = trim((string)pathinfo($filename, PATHINFO_FILENAME));
+    if ($categoryName === '') {
+        $categoryName = trim($filename);
+    }
+    $categoryName = preg_replace('/\s+/', ' ', $categoryName);
+    if (!is_string($categoryName) || trim($categoryName) === '') {
+        $firstSheetName = trim((string)($sheets[0]['sheetName'] ?? ''));
+        if ($firstSheetName !== '') {
+            $categoryName = 'Excel - ' . $firstSheetName;
+        } else {
+            $categoryName = 'Excel importado';
+        }
+    }
 
     $pdo = getPDO();
     assert_finanzas_schema($pdo);
@@ -45,8 +57,9 @@ try {
     $pdo->beginTransaction();
 
     try {
-        // 1. Crear o obtener la categoría
-        $stmt = $pdo->prepare('SELECT id FROM expense_categories WHERE user_id = :user_id AND name = :name LIMIT 1');
+        // 1. Crear u obtener categoría mixta para que quede disponible
+        // tanto en ingresos como en gastos al crear transacciones manuales.
+        $stmt = $pdo->prepare("SELECT id FROM expense_categories WHERE user_id = :user_id AND type = 'mixed' AND name = :name LIMIT 1");
         $stmt->execute([
             'user_id' => $userId,
             'name' => $categoryName,
@@ -55,12 +68,26 @@ try {
 
         if (!$categoryId) {
             $stmt = $pdo->prepare('INSERT INTO expense_categories (user_id, type, name) VALUES (:user_id, :type, :name)');
-            $stmt->execute([
-                'user_id' => $userId,
-                'type' => 'mixed',
-                'name' => $categoryName
-            ]);
-            $categoryId = $pdo->lastInsertId();
+            try {
+                $stmt->execute([
+                    'user_id' => $userId,
+                    'type' => 'mixed',
+                    'name' => $categoryName
+                ]);
+                $categoryId = $pdo->lastInsertId();
+            } catch (PDOException $e) {
+                // Si hay condición de carrera y ya existe, la recuperamos.
+                $stmt = $pdo->prepare("SELECT id FROM expense_categories WHERE user_id = :user_id AND type = 'mixed' AND name = :name LIMIT 1");
+                $stmt->execute([
+                    'user_id' => $userId,
+                    'name' => $categoryName,
+                ]);
+                $categoryId = $stmt->fetchColumn();
+
+                if (!$categoryId) {
+                    throw $e;
+                }
+            }
         }
 
         // 2. Crear una transacción neta por hoja
@@ -122,7 +149,8 @@ try {
 
         $newBalance = $income - $expenses;
 
-        $stmt = $pdo->prepare('UPDATE finanzas SET balance = :balance, income = :income, expenses = :expenses WHERE user_id = :user_id');
+        $stmt = $pdo->prepare('INSERT INTO finanzas (user_id, balance, income, expenses) VALUES (:user_id, :balance, :income, :expenses)
+            ON DUPLICATE KEY UPDATE balance = VALUES(balance), income = VALUES(income), expenses = VALUES(expenses)');
         $stmt->execute([
             'balance' => $newBalance,
             'income' => $income,

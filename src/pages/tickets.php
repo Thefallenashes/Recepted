@@ -6,10 +6,18 @@ $userId = require_authenticated_user('login.php');
 $mensaje = '';
 $tipo = '';
 
+if (isset($_SESSION['tickets_flash']) && is_array($_SESSION['tickets_flash'])) {
+    $mensaje = (string)($_SESSION['tickets_flash']['mensaje'] ?? '');
+    $tipo = (string)($_SESSION['tickets_flash']['tipo'] ?? '');
+    unset($_SESSION['tickets_flash']);
+}
+
 try {
     $pdo = getPDO();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $shouldRedirect = false;
+
         if (isset($_POST['crear_ticket'])) {
             $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
@@ -21,6 +29,7 @@ try {
             if ($title === '' || $description === '') {
                 $tipo = 'error';
                 $mensaje = 'Debes completar título y descripción del ticket.';
+                $shouldRedirect = true;
             } else {
                 $stmt = $pdo->prepare('INSERT INTO support_tickets (created_by, title, description, priority, status) VALUES (:created_by, :title, :description, :priority, :status)');
                 $stmt->execute([
@@ -34,6 +43,7 @@ try {
                 record_audit_log($pdo, 'ticket_created', 'info', 'Nuevo ticket creado desde panel tickets');
                 $tipo = 'exito';
                 $mensaje = 'Ticket creado correctamente.';
+                $shouldRedirect = true;
             }
         }
 
@@ -45,18 +55,41 @@ try {
             }
 
             if ($ticketId > 0) {
-                $stmt = $pdo->prepare('UPDATE support_tickets SET status = :status, assigned_to = :assigned_to WHERE id = :id');
-                $stmt->execute([
-                    'status' => $status,
-                    'assigned_to' => $_SESSION['usuario_id'],
-                    'id' => $ticketId,
-                ]);
-                record_audit_log($pdo, 'ticket_updated', 'info', 'Ticket #' . $ticketId . ' actualizado a estado ' . $status);
-                $tipo = 'exito';
-                $mensaje = 'Ticket actualizado.';
+                if ($status === 'closed') {
+                    $stmt = $pdo->prepare('DELETE FROM support_tickets WHERE id = :id');
+                    $stmt->execute([
+                        'id' => $ticketId,
+                    ]);
+                    record_audit_log($pdo, 'ticket_deleted', 'info', 'Ticket #' . $ticketId . ' eliminado por estado closed');
+                    $tipo = 'exito';
+                    $mensaje = 'Ticket cerrado y eliminado.';
+                } else {
+                    $stmt = $pdo->prepare('UPDATE support_tickets SET status = :status, assigned_to = :assigned_to WHERE id = :id');
+                    $stmt->execute([
+                        'status' => $status,
+                        'assigned_to' => $_SESSION['usuario_id'],
+                        'id' => $ticketId,
+                    ]);
+                    record_audit_log($pdo, 'ticket_updated', 'info', 'Ticket #' . $ticketId . ' actualizado a estado ' . $status);
+                    $tipo = 'exito';
+                    $mensaje = 'Ticket actualizado.';
+                }
+                $shouldRedirect = true;
             }
         }
+
+        if ($shouldRedirect) {
+            $_SESSION['tickets_flash'] = [
+                'tipo' => $tipo,
+                'mensaje' => $mensaje,
+            ];
+            header('Location: tickets.php');
+            exit();
+        }
     }
+
+    // Limpieza de tickets cerrados heredados para mantener la bandeja activa.
+    $pdo->exec("DELETE FROM support_tickets WHERE status = 'closed'");
 
     if (has_min_role('admin')) {
         $stmt = $pdo->query('SELECT t.*, u.correo AS created_by_email, a.correo AS assigned_to_email
